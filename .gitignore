@@ -1,8 +1,14 @@
 ######################### Personal
+__reference_and_obselete/
 RUN_TEST.py
 RUN_MOST_RECENT.py
+tr1.py
+tr2.py
+tr3.py
+tr4.py
 
 
+######################### Standard Python files from https://github.com/github/gitignore/blob/master/Python.gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
