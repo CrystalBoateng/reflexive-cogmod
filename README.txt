@@ -13,9 +13,9 @@ LONG-TERM PROJECT GOALS
 
 SHORT-TERM PROJECT GOALS
 --------------------
-Load newly-learned words/topics into the current runtime, without restarting the promgram.
+Load newly-learned words/topics into the current runtime, without restarting the program.
 Categorize words. Store words in a useful way for fast retrieval. Use POS tags to write grammatical english.
-Look up words/topics using a neural network or something similar. Choose decay patterns and other basic network behaviors.
+Look up words/topics using something like a neural network. Choose decay patterns and other basic network behaviors.
 Work on pattern compression (for writing grammatical english) and nerual pathway compression (for the network).
 
 
@@ -34,7 +34,7 @@ A working internet connection is required for this program to access webpages to
 
 CHANGE LOG
 --------------------
-This is not particularly useful right now, because I'm still creating the 'writing' functions, and the 'reading' comprehension is still pretty shallow (basically just word vectors). I'm also toying with the idea of storing learned-data in SQL, but I think I'll stick with using Python lists for now.
+This is not particularly useful right now, because I'm still creating the 'writing' functions, and the 'reading' comprehension is still pretty shallow (it's basically just word vectors). I'm also toying with the idea of storing learned-data in SQL, but I think I'll stick with using Python lists for now.
 
 
 LICENSING

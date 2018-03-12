@@ -69,7 +69,6 @@ def refreshKnownCorpus():
 	#exec 'For each line of text, concat to string.' then exec 'exec of that string'.
 	exec("stringOfKnownCorpus = '' \nwith open ('known_corpus_tokenized.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownCorpus+=line\nexec(stringOfKnownCorpus)")
 def refreshKnownTerms(): #incomplete
-	#A duplicate of this function also exists in functions_grammar_terms_rigorousDefs.py
 	"""Update the global variable 'knownTerms', from the file known_terms.py.
 	----------Dependencies:
 	import os, import sys
@@ -461,14 +460,14 @@ def read(readRequest):
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Rigorous Definitions
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Known Meanings
+#The core knownMeanings of some (but not all) knownTerms. The terms themeselves are stored in known_terms.py.
 
-#update real-time variables so that the rigorous definitions can compile
+#update real-time variables so that the Meanings can look up known terms/topics
 refreshKnownCorpus()
 refreshKnownTerms()
 
-#Rigorous Definitions of terms (the terms themeselves are stored in known_terms.py)
-#    Utilities to assist rigorous term definitions
+#   General Utilities for knownMeanings
 def isCategoryInstance (instance,finalCategory,defTraitsOnly=False):
 	"""Returns True if the 'instance' fits in the category 'finalCategory'. Else, returns false.
 	----------Dependencies:
@@ -619,11 +618,14 @@ def isDefiningCategory (instance,finalCategory):
 	output = isCategoryInstance(instance,finalCategory,True)
 	return output
 
-#   Rigorous term definitions (actual)               NOTES:
-    # -None of these terms are nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py.
-    # -All of these functions are overloaded; whenever context == "imperative", they will attempt to perform the verb/be the adjective/accommodate the adverb/etc. whenever context == "learning", they will attempt to integrate the input information, into known_terms.py.
-def term_include(myCategory,myWord,indirectObject,context):
-	"""Rigorously defines the term "include". 
+#   Definitions of knownMeanings (storage)               NOTES:
+    # -None of these terms should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py.
+    # -All of these functions are overloaded: 
+	    # whenever context == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
+	    # whenever context == "learn", the function will attempt to integrate the input information, into known_terms.py; 
+	    # whenever context == "perform", the function will attempt to perform the verb/become the adjective/perform the adverb/etc; 
+def meaning_include(myCategory,myWord,indirectObject,context):
+	"""Defines the core meaning of the term "include". 
 	----------Dependencies:
 	isDefiningCategory()
 
@@ -633,32 +635,44 @@ def term_include(myCategory,myWord,indirectObject,context):
 	indirectObject = a string
 
 	----------Returns:
-	if imperative: returns False.
-	else: a boolean.
+	a boolean (True if term evaluates to True, or if term is learned/performed successfuly. Else, False.)
 	"""
-	del indirectObject # maybe later #incomplete
+	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet #incomplete
 
-	# if context is 'imperative':
-	if context == "imperative":
-		print ("I was instructed to 'include' something within myself. However I cannot write my own code yet.")
+	#Handle errors non-fatally
+	for i in range (0, len(meaning_include)):
+		if isinstance (meaning_include[i], str):
+			pass
+		else:
+			print( "Error - a value was passed to meaning_include() which was not a string. The function reutrned None, rather than a Boolean.")
+			return None
+
+
+	# if context is 'evaluate':
+	if isDefiningCategory(myWord,myCategory) == True:
+		print("Evaluating...  The category %s includes %s." % (myCategory,myWord)) 
+		return True
+	else:
+		print("Evaluating...  The category %s does not include %s." % (myCategory,myWord)) 
 		return False
-	
-	# if context is 'learning'
+
+	# if context is 'learn':
 	#    check if the myCategory already exists as an entry in knownTerms. if so, pass. else, create it. 
 	#    append myWord to its index 3.
 	#    When done reading the whole user input... (i.e., not in this function)
 	#        pushToDisk(knownTerms)
 	#        refreshKnownTerms()
 
-	# for every other context:
-	if isDefiningCategory(myWord,myCategory) == True:
-		print("The category %s includes %s." % (myCategory,myWord)) 
-		return True
-	else:
-		print("The category %s does not include %s." % (myCategory,myWord)) 
-		return False
-def term_define(subject,directObject,context):
-	"""Rigorously defines the term "define". 
+	# if context is 'perform':
+	if context == "perform":
+		if indirectObject == None:
+			print ("I was instructed to 'include' something within myself. However, I cannot modify my own code.") #incomplete
+			return False
+		else:
+			print ("I was instructed to 'include' something within something else. However, I don't know how to do that.") #incomplete
+			return False
+def meaning_define(subject,directObject,context):
+	"""Defines the core meaning of the term "define". 
 	----------Dependencies:
 	findIndexOfString()
 
@@ -668,11 +682,11 @@ def term_define(subject,directObject,context):
 	indirectObject = a string
 
 	----------Returns:
-	if imperative: a string (e.g. "Penguin is characterized by aquatic and not flying.")
-	else: a boolean.
+	if perform: a string (e.g. "Penguin is characterized by aquatic and not flying.")
+	else: a boolean (True if term evaluates to True, or if term is learned successfuly. Else, False.)
 	"""
 
-	# if context is 'imperative':
+	# if context is 'perform':
 	myDefCats = "" #i.e. 'my defining categories'
 	miscProperties = [] #any category without a POS tag
 	negation = '' #by default, there is no negation.
@@ -703,30 +717,31 @@ def term_define(subject,directObject,context):
 
 	return("%s is characterized by %s." % (subject, myDefCats)) # this marks the exact moment when I realized I should've used a SQL database.
 
-	# if context is 'learning'
+	# if context is 'learn'
 	#    check if the directObject already exists as an entry in knownTerms. if so, pass. else, create it. 
 	#    append subject to its index 2.
 	#    When done reading the whole user input... (i.e., not in this function)
 	#        pushToDisk(knownTerms)
 	#        refreshKnownTerms()
 
-	# for every other context:
+	# if context is 'evaluate':
 	if isDefiningCategory(directObject,subject) == True:
 		return True
 	else: # Note: even if the answer is unknown, this returns false.
 		return False 
 
-#    Rigorous term definitions (handler).  
-     # This determines which definition functions to call. If all of the called functions return True, then the term is applicable. Unfortunately this list can't be stored in a separate file, or else it can't access knownTerms.
-knownTerms_rigorous = [ 
-	#[term, POS, [test which evaluates to a boolean (unless mySubject='imperative'). if all booleans true, term is true.], ],
-	["include", "VERB", [term_include] ],
-	["define", "VERB", [term_define] ],
+#   Handler for knownMeanings 
+    # This determines which definitions to call. If all of the called functions return True, then the term is applicable. Unfortunately this list can't be stored in a separate file, or else it can't access knownTerms.
+knownMeanings = [ 
+	#[term, POS, [a test that evaluates to a boolean (if context=="evaluate"). if all the booleans are True, then the meaning is applicable within a given context.], ],
+	["include", "VERB", [meaning_include], ],
+	["define", "VERB", [meaning_define], ],
+	#other non-physical terms to learn: find, difficult, know, know of, write, read
 ]
 
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Validating Grammar
-	# #    idk if i'll end up using this. if I do, I'll probably save it in an external .py file in the fodler /nlp_resources
+	# #    idk if i'll end up using this. if I do, I'll probably save it in an external .py file in the folder /nlp_resources
 	# grammaticalConstructions = [
 	# 	['NOUN','VERB'],
 	# 	['NOUN','VERB','NOUN'],
