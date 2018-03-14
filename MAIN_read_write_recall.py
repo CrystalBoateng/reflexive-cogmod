@@ -16,7 +16,8 @@ from operator import itemgetter #to sort lists of lists
 #declare global variables
 absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this script.
 knowledgePriorityLevel = 1
-mySubject = myDO = myIO = myContext = "", #for reading and writing. DO/IO means Direct Object/Indirect Object
+sentencesJustWritten = 0 #number of sentences written since last user input
+maxSentencesAtOnce = 10 #limit how many sentences can be written without user input
 from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs
 
 
@@ -454,6 +455,101 @@ def read(readRequest):
 	return True
 
 
+
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}
+#{}	@@		Remembering, Recalling, Reflecting
+#{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+# 
+refreshKnownCorpus(), refreshKnownTerms() #update real-time variables for the dependencies in both the Remembering and Writing sections
+
+#Remembering (one topic, in-depth)
+# rememberedText = textacy.Doc.load('~/Desktop', name='myFolkReading')  #incomplete
+# print('  rememberedText:')
+# print(rememberedText)
+
+#Recalling (many topics, shallowly)
+def matchCorpusTopic_simple(inputTopic,thoroughness='med'):
+	# currently this is written to search the corpus. I also need a version to scrub the search tree for knownTerms
+
+	print("\tinputTopic: ",inputTopic) #for debugging
+	matchedKeys = []
+	matchedNames = []
+	matchedTerms = []
+
+	if thoroughness == 'low': #search titles only.
+		topicListIndex = 4
+		#(not written yet)
+	elif thoroughness == 'med': #search primaryTerms (incl. titles)
+		topicListIndex = 4
+	for i in range (0,len(knownCorpus)): #for each topic...
+		for j in range (0,len(knownCorpus[i][topicListIndex])): #in the appropriate list of terms..
+			print ("\t\trunning...")
+			#if its a match, change the boolean in index 6.
+			if knownCorpus[i][topicListIndex][j] == inputTopic:
+				knownCorpus[i][6] = True
+				print("\t\tj=",j)
+				break #no need to test the rest of that topic
+			else:
+				pass
+	if thoroughness == 'high': #search secondaryTerms (incl. titles and primaryTerms)
+		topicListIndex = 5
+	elif thoroughness == 'highest':
+		pass #incomplete
+		#(not written yet)
+		#compary secondary terms to secondary terms.
+
+
+
+
+	#save the keys, names, and terms for all matches
+	for i in range (0,len(knownCorpus)): #for each topic...
+		if knownCorpus[i][6] == True:
+			matchedKeys.append = knownCorpus[i][0] #add key to list
+			matchedNames.append = knownCorpus[i][2] #add name to list
+			for j in range (0,len(knownCorpus[i][topicListIndex])):
+				matchedTerms.append = knownCorpus[i][topicListIndex][j] #add term to list
+
+
+	print ("\toutput:", matchedNames) #for debugging
+	return [matchedKeys, matchedNames, matchedTerms]
+### def triggerNetwork() #incomplete
+
+	# assert len(knownCorpus) > 0, "No content exists in the global variable knownCorpus. Most likely, known_corpus_tokenized.py was not successfully imported by updateTopicsKnown().\nImport that file before calling matchTopic()." 
+
+	# #fetch the name of the inputTopic
+	# for i in range (0,len(knownCorpus)):
+	# 	print("len(knownCorpus): ",len(knownCorpus))
+	# 	if knownCorpus[i][0] == inputKey:
+	# 		inputName = knownCorpus[i][0]
+	# #if no topics match, return an error
+	# elif knownCorpus[i][len(knownCorpus)] and knownCorpus[i][0] != inputKey: 
+	# 	currentError = "You passed a bad starting value to start the network. it doesnt exist."
+	# 	return currentError
+
+#Reflecting (learning, cleanup, pattern recognition on saved data)
+def gerundsToVerbs(): #incomplete
+	pass #change to an infinitive whenever the gerund can be found in knownTerms of compromiseConjugations.
+def deleteSimpleDuplicates(): #incomplete
+	#An overloaded function. takes the optional argument 'knownCorpus'. Otherwise, operates on 'knownTerms'.
+	#delete duplicate entries and categories from knownTerms (or knownCorpus). pushToDisk() when done.
+	pass
+def deduceTerms(): #incomplete
+	#expand knownTerms by creating new netries from any duplicate categories
+	pass 
+def deleteNestedDuplicates(): #incomplete
+	pass #delete duplicate entries and categories from knownTerms (or knownCorpus). pushToDisk() when done.
+def createNeuralShortcuts_1(): #incomplete
+	pass #I haven't done any work on nerual shortcuts yet.
+def reflectOnKnownData(): #incomplete
+	#An overloaded function. takes optional arguments such as 'knownCorpus', 'knownTerms', and later, others.
+	# If no argument is passed in, operates on every available argument, one at a time.
+	#pushToDisk(knownTerms or knownCorpus or whatever other knownLibrary)
+	pass 
+
+
+
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Writing
@@ -461,14 +557,12 @@ def read(readRequest):
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Known Meanings
-#The core knownMeanings of some (but not all) knownTerms. The terms themeselves are stored in known_terms.py.
+#The core knownMeanings of some (but not all) knownTerms. The terms themselves are stored in known_terms.py. Meanings are recognized patterns, and therefore, some may exist which do not exist as terms in English. They may be represented as pandas DataFrames or something else.
 
-#update real-time variables so that the Meanings can look up known terms/topics
-refreshKnownCorpus()
-refreshKnownTerms()
 
-#   General Utilities for knownMeanings
-def isCategoryInstance (instance,finalCategory,defTraitsOnly=False):
+
+#   General Utilities for knownMeanings *I may move these up to te Remembering section at some point.
+def isCategoryInstance (instance,finalCategory,defTraitsOnly=False): #function is used in knownMeanings defs
 	"""Returns True if the 'instance' fits in the category 'finalCategory'. Else, returns false.
 	----------Dependencies:
 	known_terms.py (in this script's directory)
@@ -600,7 +694,7 @@ def isCategoryInstance (instance,finalCategory,defTraitsOnly=False):
 
 
 	return False
-def isDefiningCategory (instance,finalCategory):
+def isDefiningCategory (instance,finalCategory): #function is used in knownMeanings defs
 	"""Returns True if 'finalCategory' is one of the defining traits of 'instance'. Else, returns false.
 	----------Dependencies:
 	isCategoryInstance()
@@ -619,74 +713,94 @@ def isDefiningCategory (instance,finalCategory):
 	return output
 
 #   Definitions of knownMeanings (storage)               NOTES:
-    # -None of these terms should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py.
+    # -None of these meanings should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py. Instead these terms should be concepts which cannot be described using a platonic ideal.
     # -All of these functions are overloaded: 
-	    # whenever context == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
-	    # whenever context == "learn", the function will attempt to integrate the input information, into known_terms.py; 
-	    # whenever context == "perform", the function will attempt to perform the verb/become the adjective/perform the adverb/etc; 
-def meaning_include(myCategory,myWord,indirectObject,context):
+	    # whenever wordContext == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
+	    # whenever wordContext == "learn", the function will attempt to integrate the input information, into known_terms.py; 
+	    # whenever wordContext == "perform", the function will attempt to perform the verb/become the adjective/perform the adverb/etc; 
+def meaning_include(wordContext,myCategory,myWord,indirectObject):
 	"""Defines the core meaning of the term "include". 
 	----------Dependencies:
 	isDefiningCategory()
 
 	----------Parameters:
+	wordContext = a string: "evaluate" or "learn" or "perform"
 	myCategory = a string
 	myWord = a string
 	indirectObject = a string
 
 	----------Returns:
-	a boolean (True if term evaluates to True, or if term is learned/performed successfuly. Else, False.)
+	a boolean (True if term evaluates to True, or if the info is learned/performed successfuly in the wordContext. Else, False.)
 	"""
 	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet #incomplete
 
 	#Handle errors non-fatally
+	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
+		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
+		return None
 	for i in range (0, len(meaning_include)):
 		if isinstance (meaning_include[i], str):
 			pass
 		else:
-			print( "Error - a value was passed to meaning_include() which was not a string. The function reutrned None, rather than a Boolean.")
+			print( "Error - a value which was not a string, was passed to one of the knownMeanings. The function reutrned None, rather than a Boolean.")
 			return None
 
 
-	# if context is 'evaluate':
-	if isDefiningCategory(myWord,myCategory) == True:
-		print("Evaluating...  The category %s includes %s." % (myCategory,myWord)) 
-		return True
-	else:
-		print("Evaluating...  The category %s does not include %s." % (myCategory,myWord)) 
-		return False
+	# if wordContext is 'evaluate':
+	if wordContext == "evaluate":
+		if isDefiningCategory(myWord,myCategory) == True: # incomplete. write a utility search tree
+			print("Evaluating...  The category %s includes %s." % (myCategory,myWord)) 
+			return True
+		else:
+			print("Evaluating...  The category %s does not include %s." % (myCategory,myWord)) 
+			return False
 
-	# if context is 'learn':
+	# if wordContext is 'learn':
+	# if wordContext == "perform":
 	#    check if the myCategory already exists as an entry in knownTerms. if so, pass. else, create it. 
 	#    append myWord to its index 3.
 	#    When done reading the whole user input... (i.e., not in this function)
 	#        pushToDisk(knownTerms)
 	#        refreshKnownTerms()
 
-	# if context is 'perform':
-	if context == "perform":
+	# if wordContext is 'perform':
+	if wordContext == "perform":
 		if indirectObject == None:
 			print ("I was instructed to 'include' something within myself. However, I cannot modify my own code.") #incomplete
 			return False
 		else:
 			print ("I was instructed to 'include' something within something else. However, I don't know how to do that.") #incomplete
 			return False
-def meaning_define(subject,directObject,context):
+def meaning_define(wordContext,subject,directObject):
 	"""Defines the core meaning of the term "define". 
 	----------Dependencies:
 	findIndexOfString()
 
 	----------Parameters:
+	wordContext = a string: "evaluate" or "learn" or "perform"
 	subject = a string
 	directObject = a string
 	indirectObject = a string
 
 	----------Returns:
 	if perform: a string (e.g. "Penguin is characterized by aquatic and not flying.")
-	else: a boolean (True if term evaluates to True, or if term is learned successfuly. Else, False.)
+	else: a boolean (True if term evaluates to True, or if the info is learned successfuly in the wordContext. Else, False.)
 	"""
+	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet #incomplete
 
-	# if context is 'perform':
+	#Handle errors non-fatally
+	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
+		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
+		return None
+	for i in range (0, len(meaning_define)):
+		if isinstance (meaning_define[i], str):
+			pass
+		else:
+			print( "Error - a value which was not a string, was passed to one of the knownMeanings. The function reutrned None, rather than a Boolean.")
+			return None
+
+
+	# if wordContext is 'perform':
 	myDefCats = "" #i.e. 'my defining categories'
 	miscProperties = [] #any category without a POS tag
 	negation = '' #by default, there is no negation.
@@ -717,27 +831,169 @@ def meaning_define(subject,directObject,context):
 
 	return("%s is characterized by %s." % (subject, myDefCats)) # this marks the exact moment when I realized I should've used a SQL database.
 
-	# if context is 'learn'
+	# if wordContext is 'learn'
 	#    check if the directObject already exists as an entry in knownTerms. if so, pass. else, create it. 
 	#    append subject to its index 2.
 	#    When done reading the whole user input... (i.e., not in this function)
 	#        pushToDisk(knownTerms)
 	#        refreshKnownTerms()
 
-	# if context is 'evaluate':
+	# if wordContext is 'evaluate':
 	if isDefiningCategory(directObject,subject) == True:
 		return True
 	else: # Note: even if the answer is unknown, this returns false.
 		return False 
+def meaning_number(wordContext,subject):
+	"""Defines the core meaning of the term "number". 
+	----------Dependencies:
+	None
+
+	----------Parameters:
+	wordContext = a string: "evaluate" or "learn" or "perform"
+	subject = a string
+	----------Returns:
+	a boolean (True if term evaluates to True, or if the info is learned successfuly in the wordContext. Else, False.)
+	"""
+	#Handle errors non-fatally
+	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
+		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
+		return None
+
+
+	# if wordContext is 'evaluate':
+	if wordContext == 'evaluate':
+		subject = float(subject)
+		if isinstance(subject, float) == True:
+			print("Evaluating...  %s is a number." % (str(subject))) 
+			return True
+		else:
+			print("Evaluating...  %s is not a number." % (str(subject))) 
+			return False
+
+	# if wordContext is 'learn':
+	if wordContext == 'learn':
+		print("Learning new types of numbers is both difficult and currently unnecessary. The function returned False.") # incomplete
+		return False
+
+	# if wordContext is 'perform':
+	if wordContext == "perform":
+		print ("I was instructed to 'perform' a number. However, this makes no conceptual sense. The function returned False.")
+		return False
+def meaning_longer(wordContext,subject,comparedObject):
+	"""Defines the core meaning of the term "longer". 
+	----------Dependencies:
+	None
+
+	----------Parameters:
+	wordContext = a string: "evaluate" or "learn" or "perform"
+	subject = preferably a string
+	comparedObject = preferably a string
+
+	----------Returns:
+	a boolean (True if term evaluates to True, or if the info is learned successfuly in the wordContext. Else, False.)
+	"""
+	#Handle errors non-fatally
+	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
+		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
+		return None
+
+
+	# if wordContext is 'evaluate':
+	if wordContext == 'evaluate':
+		subject = str(subject)
+		comparedObject = str(comparedObject)
+		if len(subject) > len(comparedObject):
+			print("Evaluating...  %s is longer than %s." % (str(subject), str(comparedObject) )) 
+			return True
+		else:
+			print("Evaluating...  %s is not longer than %s." % (str(subject), str(comparedObject) )) 
+			return False
+
+	# if wordContext is 'learn':
+	if wordContext == 'learn':
+		print ("I haven't written this part of the function yet") #incomplete
+		return False
+
+	# if wordContext is 'perform':
+	if wordContext == "perform":
+		print ("I was instructed to perform 'longer', which does not make sense without more context. The function returned False.")
+		return False
 
 #   Handler for knownMeanings 
     # This determines which definitions to call. If all of the called functions return True, then the term is applicable. Unfortunately this list can't be stored in a separate file, or else it can't access knownTerms.
 knownMeanings = [ 
-	#[term, POS, [a test that evaluates to a boolean (if context=="evaluate"). if all the booleans are True, then the meaning is applicable within a given context.], ],
-	["include", "VERB", [meaning_include], ],
-	["define", "VERB", [meaning_define], ],
-	#other non-physical terms to learn: find, difficult, know, know of, write, read
+	# [ each line contains...
+		# "the term", 
+		# "the POS", 
+		# [a test that evaluates to a boolean when wordContext=="evaluate". if all the booleans are True, then the meaning is applicable within a given wordContext],
+		# use the customSearchTree in the meaning definition. If False, default to search tree scSearchTree
+		# {'the types of information which the concept expresses': any object,},
+	# ],
+	["include", "VERB", [meaning_include], True, {'detail':True},],
+	["define", "VERB", [meaning_define], True, {'general':True},],
+	["number", "NOUN", [meaning_number], False, {'math':True,'detail':True},],
+	["longer", "ADJ", [meaning_longer], False, {'compare':True,'physical':True,'size':True,'space':True,},],
+	#other non-physical terms to learn:  find, difficult, know, know of, write, read
 ]
+
+
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Selecting Responses
+def scSearchTree(inputTerm):
+	pass #incomplete
+	# find a fast way to pull al terms which metnion the inputTerm anywhere in the knownTerm.
+	#Return a list of the knownTerms indeces which contain matching terms
+def write_sentence(scPurpose,scStructure=None,scTopic=None,do=None,io=None):
+	"""Defines the core meaning of the term "longer". 
+	----------Dependencies:
+	knownMeanings (a list), and all functions that it references (in knownMeanings[i][2])
+
+	----------Parameters:
+	scPurpose = a string. The purpose or context of the sentence. Preferably a key in knownMeanings[i][3]. If its not a key, no sentence can be written.
+	scStructure =  a list of the desired sentence scStructure to write. Optional. Useful for answering highly structured questions (e.g. [NOUN, VERB] to respond "Dog barked," in response to the question "Did the dog bark?")
+	scTopic = preferably a string. The term which it wil try to write a sentence about (e.g. "bird"). Optional-but-not-really-optional becuse if there's no topic, then what are you writing a sentence about? Can be any part of speech. Preferably a term defined in knownTerms. 
+	do =  preferably a string. A direct object for the sentence. Optional.
+	io =  preferably a string. An indirect object for the sentence. Optional.
+
+	----------Returns:
+	A string, if one can be written. Else, returns False.
+	""" #Note: when responding to statements or questions I usually evaluate sentence relevance and structure before searching for content. But I'll figure out where to insert that check, later. Also have not thought about when/how it will ask questions or use imperatives. #incomplete
+	relevantMngIndeces = []
+	scDrafts = []
+
+	# Error handling
+	if sentencesJustWritten >= maxSentencesAtOnce:
+		print ("\n write_sentence() has been terminated because %s / %s maxSentencesAtOnce have been written without user input. Either craft a more specific query or improve the write_sentence() function. \n" % (sentencesJustWritten,maxSentencesAtOnce))
+		return False
+	if scTopic==None:
+		print ("write_sentence() was instructed to write a sentence with scTopic=None... i.e. a sentence about literally anything. Good luck with that.")
+
+	# Search for relevant meanings
+	for i in range (0,len(knownMeanings)):
+		if scPurpose in knownMeanings[i][3]:
+			relevantMngIndeces.append(i)
+	# If no relevant meanings found, return False.
+	if len(relevantMngIndeces) == 0:
+		print ("No '%s' meanings relevant to '%S' were found, so no sentence about it can be written. write_sentence() returned false." % (scPurpose, scTopic))
+		return False
+
+	# For each relevant meaning, try to fit scTopic into sentence, as a subject
+	# for i in range (0,len(relevantMngIndeces)):
+	# 	currentDraft = knownMeanings[i][2][0]("arguments and stuff")
+	# For each relevant meaning, try to fit scTopic into sentence, as a direct object
+	# For each relevant meaning, try to fit scTopic into sentence, using an imperative
+
+	# Determine which sentences are most relevant (e.g. info the user doens't already know, info relevant to current conversation)
+
+	# Test for grammar. Try to correct bad grammar.
+
+	#Concatenate sentence[s] into one string. Return it.
+
+	
+
+
+#concrete example:
+#make a general statement about bird
+# write_sentence("general",None,"bird")
 
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Validating Grammar
@@ -753,95 +1009,6 @@ knownMeanings = [
 
 
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-#{}
-#{}	@@		Remembering, Recalling, Reflecting
-#{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-# 
-#Remembering (one topic, in-depth)
-# rememberedText = textacy.Doc.load('~/Desktop', name='myFolkReading')  #incomplete
-# print('  rememberedText:')
-# print(rememberedText)
-
-#Recalling (many topics, shallowly)
-def matchCorpusTopic_simple(inputTopic,thoroughness='med'):
-	# currently this is written to search the corpus. I also need a version to scrub the search tree for knownTerms
-
-	print("\tinputTopic: ",inputTopic) #for debugging
-	matchedKeys = []
-	matchedNames = []
-	matchedTerms = []
-
-	if thoroughness == 'low': #search titles only.
-		topicListIndex = 4
-		#(not written yet)
-	elif thoroughness == 'med': #search primaryTerms (incl. titles)
-		topicListIndex = 4
-	for i in range (0,len(knownCorpus)): #for each topic...
-		for j in range (0,len(knownCorpus[i][topicListIndex])): #in the appropriate list of terms..
-			print ("\t\trunning...")
-			#if its a match, change the boolean in index 6.
-			if knownCorpus[i][topicListIndex][j] == inputTopic:
-				knownCorpus[i][6] = True
-				print("\t\tj=",j)
-				break #no need to test the rest of that topic
-			else:
-				pass
-	if thoroughness == 'high': #search secondaryTerms (incl. titles and primaryTerms)
-		topicListIndex = 5
-	elif thoroughness == 'highest':
-		pass
-		#(not written yet)
-		#compary secondary terms to secondary terms.
-
-
-
-
-	#save the keys, names, and terms for all matches
-	for i in range (0,len(knownCorpus)): #for each topic...
-		if knownCorpus[i][6] == True:
-			matchedKeys.append = knownCorpus[i][0] #add key to list
-			matchedNames.append = knownCorpus[i][2] #add name to list
-			for j in range (0,len(knownCorpus[i][topicListIndex])):
-				matchedTerms.append = knownCorpus[i][topicListIndex][j] #add term to list
-
-
-	print ("\toutput:", matchedNames) #for debugging
-	return [matchedKeys, matchedNames, matchedTerms]
-### def triggerNetwork() #incomplete
-
-	# assert len(knownCorpus) > 0, "No content exists in the global variable knownCorpus. Most likely, known_corpus_tokenized.py was not successfully imported by updateTopicsKnown().\nImport that file before calling matchTopic()." 
-
-	# #fetch the name of the inputTopic
-	# for i in range (0,len(knownCorpus)):
-	# 	print("len(knownCorpus): ",len(knownCorpus))
-	# 	if knownCorpus[i][0] == inputKey:
-	# 		inputName = knownCorpus[i][0]
-	# #if no topics match, return an error
-	# elif knownCorpus[i][len(knownCorpus)] and knownCorpus[i][0] != inputKey: 
-	# 	currentError = "You passed a bad starting value to start the network. it doesnt exist."
-	# 	return currentError
-
-#Reflecting (learning, cleanup, pattern recognition on saved data)
-def gerundsToVerbs(): #incomplete
-	pass #change to an infinitive whenever the gerund can be found in knownTerms of compromiseConjugations.
-def deleteSimpleDuplicates(): #incomplete
-	#An overloaded function. takes the optional argument 'knownCorpus'. Otherwise, operates on 'knownTerms'.
-	#delete duplicate entries and categories from knownTerms (or knownCorpus). pushToDisk() when done.
-	pass
-def deduceTerms(): #incomplete
-	#expand knownTerms by creating new netries from any duplicate categories
-	pass 
-def deleteNestedDuplicates(): #incomplete
-	pass #delete duplicate entries and categories from knownTerms (or knownCorpus). pushToDisk() when done.
-def createNeuralShortcuts_1(): #incomplete
-	pass #I haven't done any work on nerual shortcuts yet.
-def reflectOnKnownData(): #incomplete
-	#An overloaded function. takes optional arguments such as 'knownCorpus', 'knownTerms', and later, others.
-	# If no argument is passed in, operates on every available argument, one at a time.
-	#pushToDisk(knownTerms or knownCorpus or whatever other knownLibrary)
-	pass 
 
 
 

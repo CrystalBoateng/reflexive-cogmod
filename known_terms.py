@@ -20,17 +20,17 @@ knownTerms = [
 		# [any other category into which ALL instances can be classified. example: ALL instances of 'defining' are 'stating'.] 
 		# {various forms of the term, e.g. conjugation for verbs or plaurality for nouns or whatever}
 		 	#  Some of the keys in this dictionary are: 
-				# 'Plaural': 	# defaults to the singular form plus 's'
+				# 'Plaural': 	*defaults to the singular form plus 's'
 				# 'PastTense':
 				# 'PresentTense':
 				# 'Gerund':
-				# 'Actor':		# defaults to the gerund form minus "ing" plus "er".
+				# 'Actor':		*defaults to the gerund form minus "ing" plus "er".
 				# 'Singular3rdPersonPerfectTense':
 				# 'PerfectTense':
 				# 'Pluperfect':
 				# (and for the verb "be": 'PluralPastTense', 'PluralPresentTense', 'PluralInfinitive').
 			# 'Infinitive' is omitted because it's already included in index 0.
-			# 'FutureTense' is omitted because it's just "will " + the infinitive.
+			# 'FutureTense' is omitted because it's simply "will " + the infinitive.
 			
 			# The dictionary doesn't need to be comprehensive, because I intend to write a conjugation function which cascades to the next-most-appropriate conjugation, whenever the requested conjugation is unavailable.
 		# ],
@@ -92,5 +92,11 @@ knownTerms = [
 	],
 	["define", "VERB",
 			["describe",], ["state",], {'PastTense':"defined",'Gerund':"defining",'Singular3rdPersonPerfectTense':"has defined",'PerfectTense':"have defined",'Pluperfect':"had defined",},
+	],
+	["number", "NOUN",
+			["CONCEPT",], ["symbol","word","abstraction",], {},
+	],
+	["longer", "ADJ",
+			["comparative",], ["long",], {},
 	],
 ] #END CONTENT (do not edit or delete this line).

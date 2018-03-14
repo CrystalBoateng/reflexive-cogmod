@@ -34,7 +34,7 @@ A working internet connection is required for this program to access webpages to
 
 CHANGE LOG
 --------------------
-This is not particularly useful right now, because I'm still creating the 'writing' functions, and the 'reading' comprehension is still pretty shallow (it's basically just word vectors). I'm also toying with the idea of storing learned-data in SQL, but I think I'll stick with using Python lists for now.
+This is not particularly useful right now, because I'm still creating the 'writing' functions, and the 'reading' comprehension is still shallow. See git commits for more detailed updates.
 
 
 LICENSING
