@@ -942,7 +942,7 @@ def scSearchTree(inputTerm):
 	pass #incomplete
 	# find a fast way to pull al terms which metnion the inputTerm anywhere in the knownTerm.
 	#Return a list of the knownTerms indeces which contain matching terms
-def write_sentence(scPurpose,scStructure=None,scTopic=None,do=None,io=None):
+def attempt_declarative(scPurpose,scStructure=None,scTopic=None,do=None,io=None):
 	"""Defines the core meaning of the term "longer". 
 	----------Dependencies:
 	knownMeanings (a list), and all functions that it references (in knownMeanings[i][2])
