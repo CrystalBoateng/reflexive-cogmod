@@ -26,6 +26,7 @@ NumPy+mkl (https://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy)
 scikit-learn (http://scikit-learn.org/stable/)
 spaCy 2.0.2 (https://spacy.io/usage/)
 textacy (https://textacy.readthedocs.io/en/latest/index.html)
+DB Browser for SQLite (http://sqlitebrowser.org/) is helpful for manually managing the database, but is not required.
 
 I'm using WinPython 3.5.4Qt5 IDLEX on Windows. I'm not sure if this works on other IDEs and operating systems; you may need to modify the the global variable absolute_filepath on line 17 of MAIN_read_write_recall.py, as well as other filepath information.
 
@@ -34,7 +35,8 @@ A working internet connection is required for this program to access webpages to
 
 CHANGE LOG
 --------------------
-This is not particularly useful right now, because I'm still creating the 'writing' functions, and the 'reading' comprehension is still shallow. See git commits for more detailed updates.
+Changed storage of learned data from Python lists in various locations, to a SQLite databse in learned_data. But kept known_corpus_tokenized.py as a Python list. 
+See git commits for more detailed updates.
 
 
 LICENSING
@@ -44,7 +46,7 @@ This code is provided under a GNU General Public License (GPLv3), and is distrib
 
 OTHER CREDITS:
 --------------------
-Conjugation key names and the conjugations for the following verbs, come from 'compromise', an open-source NLP JavaScript project published under a copyleft MIT license. View the license and the source code at: github.com/nlp-compromise/compromise or at http://compromise.cool The license is also included in this repo (as required), in the folder /nlp_resources.
+Conjugation column names and the conjugations for the following verbs, come from 'compromise', an open-source NLP JavaScript project published under a copyleft MIT license. View the license and the source code at: github.com/nlp-compromise/compromise or at http://compromise.cool The license is also included in this repo (as required), in the folder /learned_data/reference_compromise.
 	'take','can','free','puke','arise','babysit','be','is','beat','begin','ban','bet','bite','bleed','breed','bring','broadcast','build','buy','choose','cost','deal','die','dig','draw','drink','drive','eat','fall','feed','feel','fight','find','fly','blow','forbid','edit','forget','forgive','freeze','get','give','go','hang','have','hear','hide','hold','hurt','lay','lead','leave','lie','light','lose','make','mean','meet','pay','read','ring','rise','run','say','see','sell','shine','shoot','show','sing','sink','sit','slide','speak','spin','stand','steal','stick','sting','stream','strike','swear','swim','swing','teach','tear','tell','think','understand','wake','wear','win','withdraw','write','tie','ski','boil','miss','act','compete','being','imply','ice','develop','wait','aim','spill','drop','log','rub','smash','egg','suit','age','shed','break','catch','do','bind','spread','become','bend','brake','burn','burst','cling','come','creep','cut','dive','dream','flee','fling','got','grow','hit','keep','kneel','know','leap','lend','loose','prove','put','quit','ride','seek','send','set','sew','shake','shave','shut','seat','slay','sleep','sneak','speed','spend','spit','split','spring','stink','strew','sware','sweep','thrive','undergo','upset','weave','weep','wind','wring'.
 
 ASCII art by Jon McGorrill from http://www.chris.com/ascii/index.php?art=art%20and%20design/borders
