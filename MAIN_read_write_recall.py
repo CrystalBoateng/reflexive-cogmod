@@ -18,7 +18,7 @@ absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this scr
 knowledgePriorityLevel = 1
 sentencesJustWritten = 0 #number of sentences written since last user input
 maxSentencesAtOnce = 10 #limit how many sentences can be written without user input
-from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs
+# from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs #itll be a long time before this can learn verbs on its own
 
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
@@ -26,31 +26,41 @@ from nlp_resources.compromise_conjugations_mod import * #import variable comprom
 #{}	@@		General utilities
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-def generateUuid():
-	"""Generate a reasonably unique ID string based on date and time.
-	----------Dependencies:
-	import uuid
+def generateUuid(order=None):
+    """Generate a reasonably unique ID string based on date and time.
+    ----------Dependencies:
+    import uuid
+    import os or from datetime import datetime
+    
+    ----------Parameters:
+    None
 
-	----------Parameters:
-	None
-
-	----------Returns:
-	a string (e.g. '2017-11-26_9-13_85894b2f')
-	"""
-	from datetime import datetime
-	dateAndTime = datetime.now()
-	randomId = str(uuid.uuid4()) #generate a UUID
-	randomId = randomId[:8] #truncate it because 36 digits is too long
-	myUuid = "%s-%s-%s_%s-%s_%s" % (
-		str(dateAndTime.year),
-		str(dateAndTime.month),
-		str(dateAndTime.day),
-		str(dateAndTime.hour),
-		str(dateAndTime.minute),
-		randomId
-		)
-	print("Generated UUID: ",myUuid)
-	return myUuid
+    ----------Returns:
+    a string (e.g. '2018-11-26_9-13_85894b2f')
+    """
+    dateAndTime = datetime.now()
+    randomId = str(uuid.uuid4()) #generate a UUID
+    randomId = randomId[:8] #truncate it because 36 digits is too long
+    if order=="random-first":
+        myUuid = "%s_%s-%s-%s_%s-%s" % (
+            randomId,
+            str(dateAndTime.year),
+            str('%02d' % dateAndTime.month),
+            str('%02d' % dateAndTime.day),
+            str('%02d' % dateAndTime.hour),
+            str('%02d' % dateAndTime.minute)
+            )
+    else:
+        myUuid = "%s-%s-%s_%s-%s_%s" % (
+            str(dateAndTime.year),
+            str('%02d' % dateAndTime.month),
+            str('%02d' % dateAndTime.day),
+            str('%02d' % dateAndTime.hour),
+            str('%02d' % dateAndTime.minute),
+            randomId
+            )
+    print("\t\tGenerated UUID: ",myUuid)
+    return myUuid
 def pushToDisk(cachedVar): #incomplete
 	pass 
 	#this pull everything before "#BEGIN CONTENT (do not edit or delete this line)." and save it to a string.#then it will concatenate the current cached version of 'knownTerms' or 'knownCorpus'.
@@ -732,7 +742,7 @@ def meaning_include(wordContext,myCategory,myWord,indirectObject):
 	----------Returns:
 	a boolean (True if term evaluates to True, or if the info is learned/performed successfuly in the wordContext. Else, False.)
 	"""
-	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet #incomplete
+	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet. also this is only needed in the imperative context; otherwise its just the subject. #incomplete
 
 	#Handle errors non-fatally
 	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
@@ -933,7 +943,7 @@ knownMeanings = [
 	["define", "VERB", [meaning_define], True, {'general':True},],
 	["number", "NOUN", [meaning_number], False, {'math':True,'detail':True},],
 	["longer", "ADJ", [meaning_longer], False, {'compare':True,'physical':True,'size':True,'space':True,},],
-	#other non-physical terms to learn:  find, difficult, know, know of, write, read
+	#other non-physical terms to learn:  say, find, difficult, know, know of, write, read, get, make
 ]
 
 
