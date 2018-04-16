@@ -26,41 +26,41 @@ maxSentencesAtOnce = 10 #limit how many sentences can be written without user in
 #{}	@@		General utilities
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-def generateUuid(order=None):
-    """Generate a reasonably unique ID string based on date and time.
-    ----------Dependencies:
-    import uuid
-    import os or from datetime import datetime
-    
-    ----------Parameters:
-    None
+def generateUuid(order="None"):
+	"""Generate a reasonably unique ID string based on date and time.
+	----------Dependencies:
+	import uuid
+	import os or from datetime import datetime
 
-    ----------Returns:
-    a string (e.g. '2018-11-26_9-13_85894b2f')
-    """
-    dateAndTime = datetime.now()
-    randomId = str(uuid.uuid4()) #generate a UUID
-    randomId = randomId[:8] #truncate it because 36 digits is too long
-    if order=="random-first":
-        myUuid = "%s_%s-%s-%s_%s-%s" % (
-            randomId,
-            str(dateAndTime.year),
-            str('%02d' % dateAndTime.month),
-            str('%02d' % dateAndTime.day),
-            str('%02d' % dateAndTime.hour),
-            str('%02d' % dateAndTime.minute)
-            )
-    else:
-        myUuid = "%s-%s-%s_%s-%s_%s" % (
-            str(dateAndTime.year),
-            str('%02d' % dateAndTime.month),
-            str('%02d' % dateAndTime.day),
-            str('%02d' % dateAndTime.hour),
-            str('%02d' % dateAndTime.minute),
-            randomId
-            )
-    print("\t\tGenerated UUID: ",myUuid)
-    return myUuid
+	----------Parameters:
+	None
+
+	----------Returns:
+	a string (e.g. '2018_11_26-9_13-85894b2f')
+	"""
+	dateAndTime = datetime.now()
+	randomId = str(uuid.uuid4()) #generate a UUID
+	randomId = randomId[:8] #truncate it because 36 digits is too long
+	if order=="random-first":
+		myUuid = "%s_%s-%s-%s_%s-%s" % (
+			randomId,
+			str(dateAndTime.year),
+			str('%02d' % dateAndTime.month),
+			str('%02d' % dateAndTime.day),
+			str('%02d' % dateAndTime.hour),
+			str('%02d' % dateAndTime.minute)
+			)
+	else:
+		myUuid = "%s-%s-%s_%s-%s_%s" % (
+			str(dateAndTime.year),
+			str('%02d' % dateAndTime.month),
+			str('%02d' % dateAndTime.day),
+			str('%02d' % dateAndTime.hour),
+			str('%02d' % dateAndTime.minute),
+			randomId
+			)
+	print("\t\tGenerated UUID: ",myUuid)
+	return myUuid
 def pushToDisk(cachedVar): #incomplete
 	pass 
 	#this pull everything before "#BEGIN CONTENT (do not edit or delete this line)." and save it to a string.#then it will concatenate the current cached version of 'knownTerms' or 'knownCorpus'.

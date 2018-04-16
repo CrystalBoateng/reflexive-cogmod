@@ -16,7 +16,7 @@ def generateUuid(order="None"):
 	None
 
 	----------Returns:
-	a string (e.g. '2018-11-26_9-13_85894b2f')
+	a string (e.g. '2018_11_26-9_13-85894b2f')
 	"""
 	dateAndTime = datetime.now()
 	randomId = str(uuid.uuid4()) #generate a UUID
