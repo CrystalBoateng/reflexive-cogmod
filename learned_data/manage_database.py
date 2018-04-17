@@ -2,8 +2,9 @@
 import sqlite3 # for reading/writing learned data to database ***NEW
 import uuid #for UUID
 from datetime import datetime #for UUID
-import os # for creating backups ***NEW
-import shutil # for creating backups ***NEW
+import os # for creating database backups ***NEW
+import shutil # for creating database backups ***NEW
+# absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this script.
 dbConn = sqlite3.connect('learned_data.db')
 dbCursor = dbConn.cursor()
 def generateUuid(order="None"):
@@ -41,32 +42,18 @@ def generateUuid(order="None"):
 			)
 	print("\t\tGenerated UUID: ",myUuid)
 	return myUuid
-def printTable(requestedTable=None):
-	allTables = ["terms","terms_definingCateg","terms_otherCateg","terms_misc","terms_conceptType"]
+def pullQueryResults():
+	"""Copies the most recent SQLite selection. Should ONLY be called after executing a SQLite query."""
+	#pull in whatever the most recent query selected
+	dbData = dbCursor.fetchall() 
+	
+	#put the results into a list
+	listToReturn = []
+	for row in dbData:
+		listToReturn.append(row[0])
+	return listToReturn
 
-	if requestedTable == None: #if no argument, print all tables
-		for i in range (0,len(allTables)):
-			currentTable = allTables[i]
-
-			# SQLite Query
-			sql_cmd = """SELECT * FROM {}""".format(currentTable)
-			dbCursor.execute(sql_cmd)
-			dbData = dbCursor.fetchall()
-			
-			# Print results
-			print ("\n\n=========="+currentTable)
-			for row in dbData:
-				print(row)
-	else:
-		# SQLite Query
-		sql_cmd = """SELECT * FROM {}""".format(requestedTable)
-		dbCursor.execute(sql_cmd)
-		dbData = dbCursor.fetchall()
-		
-		# Print results
-		print ("\n\n=========="+requestedTable)
-		for row in dbData:
-			print(row)
+# Creating/Writing
 def createTables():
 	# Note: pastPerfect is AKA pluperfect.
 	dbCursor.execute("""CREATE TABLE IF NOT EXISTS terms (
@@ -133,8 +120,28 @@ def backupDB():
 	os.rename(dst_file, new_dst_file_name)
 
 	return True
+def updateDefComp():
+	print ("\t\tupdating each def_comprehensive in the table 'terms'.")
+	wordsWithDefComp = [
+		["517223ec_2018-04-08_17-27", "def_comp_include.py"],
+		["f71e490c_2018-04-08_17-27", "def_comp_define.py"],
+	]
 
+	for i in range (0,len(wordsWithDefComp)): #for each word with a comprehensive definition
+		currentKey = wordsWithDefComp[i][0]
+		currentFileName = wordsWithDefComp[i][1]
+		currentDefAsString = ""
+
+		#pull contents of .py file into a string
+		with open (currentFileName, 'r', encoding="utf8") as f:
+		    for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
+		        currentDefAsString += line+"\n"
+
+		#push the string to the database
+		dbCursor.execute("""UPDATE terms SET def_comprehensive = ? WHERE key = ? """, (currentDefAsString,currentKey,))
+	dbConn.commit()
 def populateTable(table):
+	"""Dependencies: updateDefComp()"""
 	if table == "terms":
 		# insert multiple values from a Python list
 		rowsToInsert = [
@@ -162,6 +169,8 @@ def populateTable(table):
 			('aad14126_2018-04-08_17-27', "here comes dat boi", "SENTENCE",None,None,None,None,None,None,None,None,None,None,None,None,None,None,"o shit, waddup!"),
 		]
 		dbCursor.executemany('insert into terms values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', rowsToInsert)
+		dbConn.commit()
+		updateDefComp()
 		## Generate new keys (code used for first run).
 		# for i in range (0,len(knownTerms)):
 		# 	key = generateUuid("random-first")
@@ -262,13 +271,62 @@ def recreateTerms():
 	populateTable("terms")
 	printTable("terms")
 
+# Reading/Executing
+def printTable(requestedTable=None):
+	allTables = ["terms","terms_definingCateg","terms_otherCateg","terms_misc","terms_conceptType"]
 
+	if requestedTable == None: #if no argument, print all tables
+		for i in range (0,len(allTables)):
+			currentTable = allTables[i]
+
+			# SQLite Query
+			sql_cmd = """SELECT * FROM {}""".format(currentTable)
+			dbCursor.execute(sql_cmd)
+			dbData = dbCursor.fetchall()
+			
+			# Print results
+			print ("\n\n=========="+currentTable)
+			for row in dbData:
+				print(row)
+	else:
+		# SQLite Query
+		sql_cmd = """SELECT * FROM {}""".format(requestedTable)
+		dbCursor.execute(sql_cmd)
+		dbData = dbCursor.fetchall()
+		
+		# Print results
+		print ("\n\n=========="+requestedTable)
+		for row in dbData:
+			print(row)
+def execDefComp(requestedKey,wordContext,subject=None,verb=None,do=None,io=None,adjAdv=None):
+    '''
+    Executes a  currentDef() from the column 'def_comprehensive' in the table 'terms'.
+    Can only return ONE row at a time, from the table 'terms'. Don't pass in any key which could return >1 row!!!
+    '''
+    #import the currentDef as string
+    dbCursor.execute("""SELECT def_comprehensive FROM terms WHERE key = ?;""", (requestedKey,))
+    dbData = dbCursor.fetchall()
+    for row in dbData:
+    	functionAsString = (row)
+    functionAsString = functionAsString[0]
+
+    #if Query returned "Null" or None, print a warning and then return None. If Query returned more than one row, same. #incomplete
+
+    #call currentDef()
+    # print(functionAsString+"\t.\n\t.\n\t.")
+    exec(functionAsString,globals()) # bring the currentDef into global scope
+    defResult = currentDef(wordContext,subject,verb,do,io,adjAdv) # call the currentDef
+    # print ("\tresults=",str(defResult))
+    return defResult
 
 
 ###################@@# Do The Things #########
 backupDB()
-recreateTerms()
-print("Done")
+updateDefComp()
+execDefComp("517223ec_2018-04-08_17-27","declarative","authors",None,"mark twain")
+
+
+print("=========Done\n")
 
 
 
