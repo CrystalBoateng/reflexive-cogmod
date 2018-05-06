@@ -236,7 +236,17 @@ def populateTable(table):
 	elif table == "terms_misc":
 		pass
 	elif table == "terms_conceptType":
-		pass
+		rowsToInsert = [
+			('2018-04-12_14-12_8ef933d9', '517223ec_2018-04-08_17-27', "detail"),
+			('2018-04-12_14-12_f112bf59', 'f71e490c_2018-04-08_17-27', "general"),
+			('2018-04-12_14-12_87192fe8', '26055ed2_2018-04-08_17-27', "math"),
+			('2018-04-12_14-12_0859fa11', '26055ed2_2018-04-08_17-27', "detail"),
+			('2018-04-12_14-12_5ba4fcbd', '2e8be200_2018-04-08_17-27', "compare"),
+			('2018-04-12_14-12_2d094bdf', '2e8be200_2018-04-08_17-27', "physical"),
+			('2018-04-12_14-12_4c4159f2', '2e8be200_2018-04-08_17-27', "size"),
+			('2018-04-12_14-12_b839f56a', '2e8be200_2018-04-08_17-27', "space"),
+		]
+		dbCursor.executemany('insert into terms_conceptType values (?,?,?)', rowsToInsert)
 	else:
 		print("populateTable() was called on an unknown table.")
 	dbConn.commit()
@@ -322,8 +332,10 @@ def execDefComp(requestedKey,wordContext,subject=None,verb=None,do=None,io=None,
 
 ###################@@# Do The Things #########
 backupDB()
-updateDefComp()
-execDefComp("517223ec_2018-04-08_17-27","declarative","authors",None,"mark twain")
+# populateTable('terms_conceptType')
+# updateDefComp()
+# execDefComp("517223ec_2018-04-08_17-27","declarative","authors",None,"mark twain")
+
 
 
 print("=========Done\n")

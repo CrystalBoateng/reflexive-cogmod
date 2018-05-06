@@ -15,6 +15,7 @@ SHORT-TERM PROJECT GOALS
 --------------------
 Load newly-learned words/topics into the current runtime, without restarting the program.
 Categorize words. Store words in a useful way for fast retrieval. Use POS tags to write grammatical english.
+Centralize error reporting and speaking tasks.
 Look up words/topics using something like a neural network. Choose decay patterns and other basic network behaviors.
 Work on pattern compression (for writing grammatical english) and nerual pathway compression (for the network).
 
@@ -35,7 +36,7 @@ A working internet connection is required for this program to access webpages to
 
 CHANGE LOG
 --------------------
-Changed storage of learned data from Python lists in various locations, to a SQLite databse in learned_data. But kept known_corpus_tokenized.py as a Python list. 
+Changed storage of learned data from Python lists in various locations, to a SQLite databse in learned_data. But kept known_corpus_tokenized.py as a Python list (for now). 
 See git commits for more detailed updates.
 
 
