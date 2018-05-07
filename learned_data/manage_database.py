@@ -7,6 +7,7 @@ import shutil # for creating database backups ***NEW
 # absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this script.
 dbConn = sqlite3.connect('learned_data.db')
 dbCursor = dbConn.cursor()
+dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
 def generateUuid(order="None"):
 	"""Generate a reasonably unique ID string based on date and time.
 	----------Dependencies:
@@ -57,7 +58,7 @@ def pullQueryResults():
 def createTables():
 	# Note: pastPerfect is AKA pluperfect.
 	dbCursor.execute("""CREATE TABLE IF NOT EXISTS terms (
-		key TEXT PRIMARY KEY,
+		key TEXT,
 		term TEXT,
 		partOfSpeech TEXT,
 		def_comprehensive TEXT,
@@ -74,31 +75,44 @@ def createTables():
 		presentParticiple TEXT,
 		subjunctive TEXT,
 		actor TEXT,
-		tradResponse TEXT
+		tradResponse TEXT,
+		PRIMARY KEY(`key`)
 		)""")
 	dbCursor.execute("""CREATE TABLE IF NOT EXISTS terms_definingCateg (
-		key TEXT PRIMARY KEY,
+		key TEXT,
 		terms_key TEXT NOT NULL,
+		term TEXT,
 		definingCateg TEXT,
-		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE
+		PRIMARY KEY(`key`),
+		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE,
+		FOREIGN KEY(`term`) REFERENCES `terms`(`term`) ON DELETE CASCADE ON UPDATE CASCADE
 		)""")
 	dbCursor.execute("""CREATE TABLE IF NOT EXISTS terms_otherCateg (
-		key TEXT PRIMARY KEY,
+		key TEXT,
 		terms_key TEXT,
+		term TEXT,
 		otherCateg TEXT,
-		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE
+		PRIMARY KEY(`key`),
+		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE,
+		FOREIGN KEY(`term`) REFERENCES `terms`(`term`) ON DELETE CASCADE ON UPDATE CASCADE
 		)""")
 	dbCursor.execute("""CREATE TABLE IF NOT EXISTS terms_misc (
-		key TEXT PRIMARY KEY,
+		key TEXT,
 		terms_key TEXT,
+		term TEXT,
 		property TEXT,
-		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE
+		PRIMARY KEY(`key`),
+		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE,
+		FOREIGN KEY(`term`) REFERENCES `terms`(`term`) ON DELETE CASCADE ON UPDATE CASCADE
 		)""")
 	dbCursor.execute("""CREATE TABLE IF NOT EXISTS terms_conceptType (
-		key TEXT PRIMARY KEY,
+		key TEXT,
 		terms_key TEXT,
+		term TEXT,
 		conceptType TEXT,
-		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE
+		PRIMARY KEY(`key`),
+		FOREIGN KEY(`terms_key`) REFERENCES `terms`(`key`) ON DELETE CASCADE ON UPDATE CASCADE,
+		FOREIGN KEY(`term`) REFERENCES `terms`(`term`) ON DELETE CASCADE ON UPDATE CASCADE
 		)""")
 def backupDB():
 	""" 
@@ -166,7 +180,7 @@ def populateTable(table):
 			('26055ed2_2018-04-08_17-27', "number", "NOUN",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
 			('2e8be200_2018-04-08_17-27', "longer", "ADJ",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
 			('2883e6a9_2018-04-08_17-27', "speak of the devil and he shall appear", "SENTENCE",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
-			('aad14126_2018-04-08_17-27', "here comes dat boi", "SENTENCE",None,None,None,None,None,None,None,None,None,None,None,None,None,None,"o shit, waddup!"),
+			('aad14126_2018-04-08_17-27', "hello", "INTJ",None,None,None,None,None,None,None,None,None,None,None,None,None,None,"hello")
 		]
 		dbCursor.executemany('insert into terms values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', rowsToInsert)
 		dbConn.commit()
@@ -183,70 +197,70 @@ def populateTable(table):
 	elif table == "terms_definingCateg":
 		# insert multiple values from a Python list
 		rowsToInsert = [
-			("96d48984_2018-04-08_18-24", "395221b5_2018-04-08_17-27", "instrument"),
-			("dbf5e29f_2018-04-08_18-24", "395221b5_2018-04-08_17-27", "tool"),
-			("c1d436f8_2018-04-08_18-24", "395221b5_2018-04-08_17-27", "inanimate"),
-			("8aa29813_2018-04-08_18-24", "991335b6_2018-04-08_17-27", "object"),
-			("b958a608_2018-04-08_18-24", "47f86f92_2018-04-08_17-27", "musical instrument"),
-			("26d29994_2018-04-08_18-24", "47f86f92_2018-04-08_17-27", "object shaped like a guitar"),
-			("f6b723b5_2018-04-08_18-24", "3e62a082_2018-04-08_17-27", "object"),
-			("26d3c19e_2018-04-08_18-24", "3e62a082_2018-04-08_17-27", "owned by me"),
-			("df7d60da_2018-04-08_18-24", "f052bbab_2018-04-08_17-27", "software"),
-			("29c5854f_2018-04-08_18-24", "f052bbab_2018-04-08_17-27", "owned by me"),
-			("e977753f_2018-04-08_18-24", "c553b8a1_2018-04-08_17-27", "guitar"),
-			("bfa1ea3d_2018-04-08_18-24", "c553b8a1_2018-04-08_17-27", "black"),
-			("6c5de551_2018-04-08_18-24", "c553b8a1_2018-04-08_17-27", "physical object owned by me"),
-			("404a17f8_2018-04-08_18-24", "04da5d0b_2018-04-08_17-27", "color"),
-			("3bec8cd1_2018-04-08_18-24", "04da5d0b_2018-04-08_17-27", "dark"),
-			("bf2f917d_2018-04-08_18-24", "4bd02b9d_2018-04-08_17-27", "action"),
-			("cffe3829_2018-04-08_18-24", "4bd02b9d_2018-04-08_17-27", "locomote"),
-			("aafa2704_2018-04-08_18-24", "4bd02b9d_2018-04-08_17-27", "use"),
-			("1346f372_2018-04-08_18-24", "ec7f8a50_2018-04-08_17-27", "in air"),
-			("47179c63_2018-04-08_18-24", "47651306_2018-04-08_17-27", "fly"),
-			("d4ed033a_2018-04-08_18-24", "47651306_2018-04-08_17-27", "animal"),
-			("6cd27521_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "bird"),
-			("36c0196d_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "aquatic"),
-			("ef98c346_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "waterfowl"),
-			("3d4394f0_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "bird"),
-			("fdbd83b3_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "tuxedo-wearing"),
-			("9bc7ec15_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "aquatic"),
-			("0de56481_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "not fly"),
-			("2af48527_2018-04-08_18-24", "36dc0a25_2018-04-08_17-27", "bird"),
-			("552b10b0_2018-04-08_18-24", "36dc0a25_2018-04-08_17-27", "aquatic"),
-			("351d6caa_2018-04-08_18-24", "36dc0a25_2018-04-08_17-27", "waterfowl"),
-			("495cc279_2018-04-08_18-24", "06339b16_2018-04-08_17-27", "live in water"),
-			("fb38bcaa_2018-04-08_18-24", "f71e490c_2018-04-08_17-27", "describe"),
-			("b510c436_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "concept"),
-			("9025dbac_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "comparative"),
+			("96d48984_2018-04-08_18-24", "395221b5_2018-04-08_17-27", "musical instrument","instrument"),
+			("dbf5e29f_2018-04-08_18-24", "395221b5_2018-04-08_17-27", "musical instrument","tool"),
+			("c1d436f8_2018-04-08_18-24", "395221b5_2018-04-08_17-27", "musical instrument","inanimate"),
+			("8aa29813_2018-04-08_18-24", "991335b6_2018-04-08_17-27", "object shaped like a guitar","object"),
+			("b958a608_2018-04-08_18-24", "47f86f92_2018-04-08_17-27", "guitar","musical instrument"),
+			("26d29994_2018-04-08_18-24", "47f86f92_2018-04-08_17-27", "guitar","object shaped like a guitar"),
+			("f6b723b5_2018-04-08_18-24", "3e62a082_2018-04-08_17-27", "physical object owned by me","object"),
+			("26d3c19e_2018-04-08_18-24", "3e62a082_2018-04-08_17-27", "physical object owned by me","owned by me"),
+			("df7d60da_2018-04-08_18-24", "f052bbab_2018-04-08_17-27", "dominionstats","software"),
+			("29c5854f_2018-04-08_18-24", "f052bbab_2018-04-08_17-27", "dominionstats","owned by me"),
+			("e977753f_2018-04-08_18-24", "c553b8a1_2018-04-08_17-27", "huntokar","guitar"),
+			("bfa1ea3d_2018-04-08_18-24", "c553b8a1_2018-04-08_17-27", "huntokar","black"),
+			("6c5de551_2018-04-08_18-24", "c553b8a1_2018-04-08_17-27", "huntokar","physical object owned by me"),
+			("404a17f8_2018-04-08_18-24", "04da5d0b_2018-04-08_17-27", "black","color"),
+			("3bec8cd1_2018-04-08_18-24", "04da5d0b_2018-04-08_17-27", "black","dark"),
+			("bf2f917d_2018-04-08_18-24", "4bd02b9d_2018-04-08_17-27", "run","action"),
+			("cffe3829_2018-04-08_18-24", "4bd02b9d_2018-04-08_17-27", "run","locomote"),
+			("aafa2704_2018-04-08_18-24", "4bd02b9d_2018-04-08_17-27", "run","use"),
+			("1346f372_2018-04-08_18-24", "ec7f8a50_2018-04-08_17-27", "fly","in air"),
+			("47179c63_2018-04-08_18-24", "47651306_2018-04-08_17-27", "bird","fly"),
+			("d4ed033a_2018-04-08_18-24", "47651306_2018-04-08_17-27", "bird","animal"),
+			("6cd27521_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "goose","bird"),
+			("36c0196d_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "goose","aquatic"),
+			("ef98c346_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "goose","waterfowl"),
+			("3d4394f0_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "penguin","bird"),
+			("fdbd83b3_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "penguin","tuxedo-wearing"),
+			("9bc7ec15_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "penguin","aquatic"),
+			("0de56481_2018-04-08_18-24", "410593b5_2018-04-08_17-27", "penguin","not fly"),
+			("2af48527_2018-04-08_18-24", "36dc0a25_2018-04-08_17-27", "duck","bird"),
+			("552b10b0_2018-04-08_18-24", "36dc0a25_2018-04-08_17-27", "duck","aquatic"),
+			("351d6caa_2018-04-08_18-24", "36dc0a25_2018-04-08_17-27", "duck","waterfowl"),
+			("495cc279_2018-04-08_18-24", "06339b16_2018-04-08_17-27", "aquatic","live in water"),
+			("fb38bcaa_2018-04-08_18-24", "f71e490c_2018-04-08_17-27", "define","describe"),
+			("b510c436_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","concept"),
+			("9025dbac_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "longer","comparative")
 		]
-		dbCursor.executemany('insert into terms_definingCateg values (?,?,?)', rowsToInsert)
+		dbCursor.executemany('insert into terms_definingCateg values (?,?,?,?)', rowsToInsert)
 
 	elif table == "terms_otherCateg":
 		rowsToInsert = [
-			("5cda575a_2018-04-08_18-24", "47f86f92_2018-04-08_17-27", "bridged"),
-			("ded8efac_2018-04-08_18-24", "47651306_2018-04-08_17-27", "winged"),
-			("2d4fc793_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "migrational"),
-			("88fbca4a_2018-04-08_18-24", "f71e490c_2018-04-08_17-27", "state"),
-			("b3a4cd72_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "symbol"),
-			("b2da49a4_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "word"),
-			("f6b3e0e6_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "abstraction"),
-			("343cbd9e_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "long"),
+			("5cda575a_2018-04-08_18-24", "47f86f92_2018-04-08_17-27", "guitar","bridged"),
+			("ded8efac_2018-04-08_18-24", "47651306_2018-04-08_17-27", "bird","winged"),
+			("2d4fc793_2018-04-08_18-24", "7e2e76d4_2018-04-08_17-27", "goose","migrational"),
+			("88fbca4a_2018-04-08_18-24", "f71e490c_2018-04-08_17-27", "define","state"),
+			("b3a4cd72_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","symbol"),
+			("b2da49a4_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","word"),
+			("f6b3e0e6_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","abstraction"),
+			("343cbd9e_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "longer","long")
 		]
-		dbCursor.executemany('insert into terms_otherCateg values (?,?,?)', rowsToInsert)
+		dbCursor.executemany('insert into terms_otherCateg values (?,?,?,?)', rowsToInsert)
 	elif table == "terms_misc":
 		pass
 	elif table == "terms_conceptType":
 		rowsToInsert = [
-			('2018-04-12_14-12_8ef933d9', '517223ec_2018-04-08_17-27', "detail"),
-			('2018-04-12_14-12_f112bf59', 'f71e490c_2018-04-08_17-27', "general"),
-			('2018-04-12_14-12_87192fe8', '26055ed2_2018-04-08_17-27', "math"),
-			('2018-04-12_14-12_0859fa11', '26055ed2_2018-04-08_17-27', "detail"),
-			('2018-04-12_14-12_5ba4fcbd', '2e8be200_2018-04-08_17-27', "compare"),
-			('2018-04-12_14-12_2d094bdf', '2e8be200_2018-04-08_17-27', "physical"),
-			('2018-04-12_14-12_4c4159f2', '2e8be200_2018-04-08_17-27', "size"),
-			('2018-04-12_14-12_b839f56a', '2e8be200_2018-04-08_17-27', "space"),
+			("2018-04-12_14-12_8ef933d9", "517223ec_2018-04-08_17-27", "include", "detail"),
+			("2018-04-12_14-12_f112bf59", "f71e490c_2018-04-08_17-27", "define", "general"),
+			("2018-04-12_14-12_87192fe8", "26055ed2_2018-04-08_17-27", "number", "math"),
+			("2018-04-12_14-12_0859fa11", "26055ed2_2018-04-08_17-27", "number", "detail"),
+			("2018-04-12_14-12_5ba4fcbd", "2e8be200_2018-04-08_17-27", "longer", "compare"),
+			("2018-04-12_14-12_2d094bdf", "2e8be200_2018-04-08_17-27", "longer", "physical"),
+			("2018-04-12_14-12_4c4159f2", "2e8be200_2018-04-08_17-27", "longer", "size"),
+			("2018-04-12_14-12_b839f56a", "2e8be200_2018-04-08_17-27", "longer", "space")
 		]
-		dbCursor.executemany('insert into terms_conceptType values (?,?,?)', rowsToInsert)
+		dbCursor.executemany('insert into terms_conceptType values (?,?,?,?)', rowsToInsert)
 	else:
 		print("populateTable() was called on an unknown table.")
 	dbConn.commit()
@@ -331,8 +345,13 @@ def execDefComp(requestedKey,wordContext,subject=None,verb=None,do=None,io=None,
 
 
 ###################@@# Do The Things #########
-backupDB()
-# populateTable('terms_conceptType')
+createTables()
+# backupDB()
+populateTable('terms')
+populateTable('terms_definingCateg')
+populateTable('terms_otherCateg')
+populateTable('terms_conceptType')
+
 # updateDefComp()
 # execDefComp("517223ec_2018-04-08_17-27","declarative","authors",None,"mark twain")
 
@@ -401,6 +420,7 @@ print("=========Done\n")
 		
 
 		# terms_definingcateg = the categories which define the object ontologically, and into which all instances can be classified. for example: every time someone 'defines' something, they are 'describing' it.
-		# terms_othercateg = other categories into which all instances can be classified. for example: all instances of 'defining' are instances of 'claiming'.]
+		# terms_otherCateg = other categories into which all instances can be classified. for example: all instances of 'defining' are instances of 'claiming'.]
 
 
+# Required and Suggested Database Indexes - https://www.sqlite.org/foreignkeys.html#fk_indexes
