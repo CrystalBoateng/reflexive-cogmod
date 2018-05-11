@@ -1,4 +1,4 @@
-reflexive-cogmod    version 0.01    12/28/2017
+reflexive-cogmod    version 0.02    2018
 
 
 LONG-TERM PROJECT GOALS

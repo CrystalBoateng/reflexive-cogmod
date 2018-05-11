@@ -54,6 +54,8 @@ def pullQueryResults():
 		listToReturn.append(row[0])
 	return listToReturn
 
+	if listToReturn == []: # if no results, return None.
+		return None
 # Creating/Writing
 def createTables():
 	# Note: pastPerfect is AKA pluperfect.

@@ -4,20 +4,26 @@
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
-#load NLP dependencies
-import textacy #to create docs/doc metadata, and to lemmatize and tokenize unstructured text
-import os #to read and write from disk
-import sys #to delete and reload python files
-import re #to parse html
-import json #to read doc metadata
-import uuid #to generate unique IDs for topics
+#import dependencies
+from datetime import datetime #to generate UUIDs
 from operator import itemgetter #to sort lists of lists
+import json #to read doc metadata
+import os #to read and write from disk, and backup database
+import re #to parse html
+import shutil #for creating database backups
+import sqlite3 #for reading/writing to database
+import sys #to delete and reload python files
+import textacy #to create docs/doc metadata, and to lemmatize and tokenize unstructured text
+import uuid #to generate UUIDs
 
 #declare global variables
 absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this script.
 knowledgePriorityLevel = 1
 sentencesJustWritten = 0 #number of sentences written since last user input
 maxSentencesAtOnce = 10 #limit how many sentences can be written without user input
+dbConn = sqlite3.connect(absolute_filepath+'/learned_data/learned_data.db') #to connect to database
+dbCursor = dbConn.cursor() #to connect to database
+# dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
 # from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs #itll be a long time before this can learn verbs on its own
 
 
@@ -26,7 +32,27 @@ maxSentencesAtOnce = 10 #limit how many sentences can be written without user in
 #{}	@@		General utilities
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-def generateUuid(order="None"):
+def pullQueryResults():
+	"""Copies the most recent SQLite selection. Should ONLY be called after executing a SQLite query.
+	----------Dependencies:
+	import sqlite3
+	the global variables 'dbConn' and 'dbCursor'.
+	----------Parameters:
+	None
+	----------Returns:
+	a list, or None.
+	"""
+	#pull in whatever the most recent query selected
+	dbData = dbCursor.fetchall() 
+	#put the results into a list
+	listToReturn = []
+	for row in dbData:
+		listToReturn.append(row[0])
+	return listToReturn
+
+	if listToReturn == []: # if no results, return None.
+		return None
+def generateUuid(order=None):
 	"""Generate a reasonably unique ID string based on date and time.
 	----------Dependencies:
 	import uuid
@@ -61,6 +87,28 @@ def generateUuid(order="None"):
 			)
 	print("\t\tGenerated UUID: ",myUuid)
 	return myUuid
+def backupDB():
+	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
+	----------Dependencies:
+	generateUuid
+	import os, import shutil
+	
+	----------Returns:
+	True (unless a fatal error occurs)
+	"""
+	print("\tcreating backup of learned_data.db")
+	newFileName = "learned_data_"+str(generateUuid())+".db"
+
+	src_dir= absolute_filepath+"/learned_data"
+	dst_dir= absolute_filepath+"/learned_data/backup_databases"
+	src_file = os.path.join(src_dir, "learned_data.db")
+	shutil.copy(src_file,dst_dir)
+
+	dst_file = os.path.join(dst_dir, "learned_data.db")
+	new_dst_file_name = os.path.join(dst_dir, newFileName)
+	os.rename(dst_file, new_dst_file_name)
+
+	return True
 def pushToDisk(cachedVar): #incomplete
 	pass 
 	#this pull everything before "#BEGIN CONTENT (do not edit or delete this line)." and save it to a string.#then it will concatenate the current cached version of 'knownTerms' or 'knownCorpus'.
@@ -79,27 +127,6 @@ def refreshKnownCorpus():
 	"""
 	#exec 'For each line of text, concat to string.' then exec 'exec of that string'.
 	exec("stringOfKnownCorpus = '' \nwith open ('known_corpus_tokenized.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownCorpus+=line\nexec(stringOfKnownCorpus)")
-def refreshKnownTerms(): #incomplete
-	"""Update the global variable 'knownTerms', from the file known_terms.py.
-	----------Dependencies:
-	import os, import sys
-	known_terms.py (in this script's directory)
-
-	----------Parameters:
-	None
-
-	----------Returns:
-	None (content is pushed straight to the global variable named knownTerms)
-	"""
-	print ("\texecuting known_terms.py to refresh knownTerms.")
-	
-	#exec 'For each line of text, concat to string.' then exec 'exec of that string'.
-	exec("stringOfKnownTerms = '' \nwith open ('known_terms.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownTerms+=line\nexec(stringOfKnownTerms)")
-	
-	# #update knownTerms_verbs using the updated knownTerms
-	# print ("\tupdating knownTerms_verbs...")
-	# global knownTerms_verbs
-	# knownTerms_verbs = ['example verb'] # not yet written.
 def sortLists(myLists,index,order):
     """Takes a list of lists. Returns it, sorted by a given index.
 	----------Dependencies:
@@ -150,7 +177,47 @@ def findIndexOfString(string,storedList,indexOne,indexTwo=None):
 	
 	#if no match found, return False
 	return False
+def execDefComp(requestedTerm,wordContext,subject=None,verb=None,do=None,io=None,adjAdv=None):
+	"""	Executes a currentDef() located in the column 'def_comprehensive' in the table 'terms'.
+	This function's query can only return ONE row at a time, from the table 'terms'. Don't pass in any term which could return >1 row!!!
+	"""
+	def printArgs():
+		print("\t\t\t\trequestedTerm=",requestedTerm)
+		print("\t\t\t\twordContext=",wordContext)
+		print("\t\t\t\tsubject=",subject)
+		print("\t\t\t\tverb=",verb)
+		print("\t\t\t\tdo=",do)
+		print("\t\t\t\tio=",io)
+		print("\t\t\t\tadjAdv=",adjAdv)
 
+	dbCursor.execute("""SELECT def_comprehensive FROM terms WHERE term = ?;""", (requestedTerm,))
+	dbData = pullQueryResults()
+	if isinstance(dbData,list):
+
+		#report errors
+		if len(dbData) == 0:
+			print("\t\t\tA bad argument was passed to execDefComp(), so no def_comprehensive was found. Returned None. \n\t\t\t\tArguments passed in:")
+			printArgs()
+			return None
+		if len(dbData) > 1:
+			print("\t\t\tA bad argument was passed to execDefComp(), resulting in mulltiple results. Only the first result was used.\n\t\t\tArguments passed in:")
+			printArgs()
+
+		#import the currentDef as string
+		functionAsString = dbData[0]
+		#call the currentDef() located in the executed string
+		# print(functionAsString+"\t.\n\t.\n\t.")
+		exec(functionAsString,globals()) # bring the currentDef into global scope
+		defResult = currentDef(wordContext,subject,verb,do,io,adjAdv) # call the currentDef
+		# print ("\tresults=",str(defResult))
+		return defResult
+
+	else:
+		print("\t\t\tA bad argument was passed to execDefComp(), so no def_comprehensive was found. Returned None. \n\t\t\tArguments passed in:")
+		printArgs()
+		return None
+
+execDefComp("include","evaluate")
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
@@ -472,7 +539,7 @@ def read(readRequest):
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 # 
-refreshKnownCorpus(), refreshKnownTerms() #update real-time variables for the dependencies in both the Remembering and Writing sections
+refreshKnownCorpus()
 
 #Remembering (one topic, in-depth)
 # rememberedText = textacy.Doc.load('~/Desktop', name='myFolkReading')  #incomplete
@@ -541,10 +608,32 @@ def matchCorpusTopic_simple(inputTopic,thoroughness='med'):
 #Reflecting (learning, cleanup, pattern recognition on saved data)
 def gerundsToVerbs(): #incomplete
 	pass #change to an infinitive whenever the gerund can be found in knownTerms of compromiseConjugations.
+def updateChildTerms(): #incomplete
+	pass #this should be unnecessary once child tables can CASCADE/DELETE rows on UPDATE
 def deleteSimpleDuplicates(): #incomplete
 	#An overloaded function. takes the optional argument 'knownCorpus'. Otherwise, operates on 'knownTerms'.
 	#delete duplicate entries and categories from knownTerms (or knownCorpus). pushToDisk() when done.
 	pass
+def updateDefComp():
+	print ("\t\tupdating each def_comprehensive in the table 'terms'.")
+	wordsWithDefComp = [
+		["517223ec_2018-04-08_17-27", "def_comp_include.py"],
+		["f71e490c_2018-04-08_17-27", "def_comp_define.py"],
+	]
+
+	for i in range (0,len(wordsWithDefComp)): #for each word with a comprehensive definition
+		currentKey = wordsWithDefComp[i][0]
+		currentFileName = absolute_filepath+"/learned_data/"+wordsWithDefComp[i][1]
+		currentDefAsString = ""
+
+		#pull contents of .py file into a string
+		with open (currentFileName, 'r', encoding="utf8") as f:
+		    for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
+		        currentDefAsString += line+"\n"
+
+		#push the string to the database
+		dbCursor.execute("""UPDATE terms SET def_comprehensive = ? WHERE key = ? """, (currentDefAsString,currentKey,))
+	dbConn.commit()
 def deduceTerms(): #incomplete
 	#expand knownTerms by creating new netries from any duplicate categories
 	pass 
