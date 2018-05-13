@@ -7,6 +7,7 @@
 #import dependencies
 from datetime import datetime #to generate UUIDs
 from operator import itemgetter #to sort lists of lists
+import itertools # to removeDuplicates()
 import json #to read doc metadata
 import os #to read and write from disk, and backup database
 import re #to parse html
@@ -32,26 +33,115 @@ dbCursor = dbConn.cursor() #to connect to database
 #{}	@@		General utilities
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-def pullQueryResults():
-	"""Copies the most recent SQLite selection. Should ONLY be called after executing a SQLite query.
-	----------Dependencies:
-	import sqlite3
-	the global variables 'dbConn' and 'dbCursor'.
-	----------Parameters:
-	None
-	----------Returns:
-	a list, or None.
-	"""
-	#pull in whatever the most recent query selected
-	dbData = dbCursor.fetchall() 
-	#put the results into a list
-	listToReturn = []
-	for row in dbData:
-		listToReturn.append(row[0])
-	return listToReturn
 
-	if listToReturn == []: # if no results, return None.
-		return None
+#Utilities with no external dependencies:
+def eow(input,p=False):
+	"""Takes a list of lists of lists of words. Returns it, but with Every Other Word omitted. Useful for removing parts of speech from sentences to print.
+		Or, if p == True, 
+	----------Dependencies:
+	None
+	
+	----------Parameters:
+	input = list of lists of lists of words.
+		Example: [
+			[['bird', 'NOUN'], ['fly', 'VERB']], 
+			[['number', 'NOUN'], ['include', 'VERB'], ['eight', 'ADV']]
+		]
+	p = a boolean. If True, prints directly from this function.
+	
+	----------Returns:
+	A list of lists of strings, e.g.:
+		Example: [
+			['bird', 'fly'], 
+			['number', 'include', 'eight']
+		]
+	"""
+	errors = 0
+	output = []
+	
+	if isinstance(input,list) and len(input)>0: #fail gracefully
+	
+		for i in range (0,len(input)):
+			sentence = input[i]
+			newSc = []
+			
+			if isinstance(sentence,list) and len(sentence)>0: #fail gracefully
+				for j in range (0,len(sentence)):
+					termGroup = sentence[j]
+					
+					if isinstance(termGroup,list) and len(termGroup)>0: #fail gracefully
+						newSc.append(termGroup[0])
+					else:
+						errors += 1
+						print("  ERROR - Bad value in eow() parameter:",str(termGroup))
+				if p == True and len(newSc)>0: #print stuff. fail gracefully.
+					toPrint = ""
+					for j in range (0,len(newSc)):
+						toPrint = "%s %s" % (toPrint,newSc[j])
+					print(" |",toPrint)
+			else:
+				errors += 1
+				print("  ERROR - Bad value in eow() parameter:",str(sentence))
+			output.append(newSc)
+
+	else:
+		errors += 1
+		print("  ERROR - Bad value passed to eow().")
+
+	if errors > 0:
+		print("  The full list of values passed to eow() was:",str(output))
+	if p==False:
+		return(output)
+	else:
+		return output
+def findIndexOfString(string,storedList,indexOne,indexTwo=None):
+	"""Find the index of a string in a list. (Or in a list of lists, once I get around to it.)
+	----------Dependencies:
+	None
+
+	----------Parameters:
+	string = the string you want to find, e.g. 'musical instrument'
+	storedList = the name of the list to search within, e.g. 'knownTerms'
+	indexOne = a number. the index of storedList, to search within. e.g. 0
+	indexTwo = a number. indexTwo exists because I will later overload this function to also hanlde lists of lists.
+
+	----------Returns:
+	A number. The index of the string found in storedList. If the string was not found, returns False.
+	"""
+	
+	
+	tempStroredList = []
+
+	for i in range(0,len(storedList)):
+		#if the two strings have same first AND last letter AND are the same length...
+		if string[0]==storedList[i][indexOne][0] and string[-1]==storedList[i][indexOne][-1] and len(string)==len(storedList[i][0]): 
+			#save the matching index in tempStroredList
+			tempStroredList.append(i)
+
+	#search tempStoredList for precise matches. 
+	for i in range(0,len(tempStroredList)):
+		storedListIndex = tempStroredList[i]
+		if storedList[storedListIndex][indexOne] == string:
+			return storedListIndex #return the (tempStroredList) index of the first precise match found.
+	
+	#if no match found, return False
+	return False
+def findPosTemplates():
+	"""One day this will pull varied lists from a fancy table, but for now there are only two sentence templates.
+	----------Dependencies:
+	None, for now. learned_data.db, eventually.
+	
+	----------Parameters:
+	None, for now.
+	
+	----------Dependencies:
+	A list of lists containing strings which are parts of speech.
+	"""
+	allSctemplates = [
+		["NOUN", "VERB"],
+		["NOUN", "VERB", "NOUN"],
+	]
+	return allSctemplates
 def generateUuid(order=None):
 	"""Generate a reasonably unique ID string based on date and time.
 	----------Dependencies:
@@ -87,46 +177,18 @@ def generateUuid(order=None):
 			)
 	print("\t\tGenerated UUID: ",myUuid)
 	return myUuid
-def backupDB():
-	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
-	----------Dependencies:
-	generateUuid
-	import os, import shutil
-	
-	----------Returns:
-	True (unless a fatal error occurs)
+def removeDuplicates(myList):
+	"""Takes a list. Returns it with only the unique values.
+	----------Dependencies: 
+	import itertools
 	"""
-	print("\tcreating backup of learned_data.db")
-	newFileName = "learned_data_"+str(generateUuid())+".db"
-
-	src_dir= absolute_filepath+"/learned_data"
-	dst_dir= absolute_filepath+"/learned_data/backup_databases"
-	src_file = os.path.join(src_dir, "learned_data.db")
-	shutil.copy(src_file,dst_dir)
-
-	dst_file = os.path.join(dst_dir, "learned_data.db")
-	new_dst_file_name = os.path.join(dst_dir, newFileName)
-	os.rename(dst_file, new_dst_file_name)
-
-	return True
-def pushToDisk(cachedVar): #incomplete
-	pass 
-	#this pull everything before "#BEGIN CONTENT (do not edit or delete this line)." and save it to a string.#then it will concatenate the current cached version of 'knownTerms' or 'knownCorpus'.
-	#then it will save all that to the disk.
-def refreshKnownCorpus():
-	"""Update the global variable 'knownCorpus', from the file known_corpus_tokenized.py.
-	----------Dependencies:
-	import os, import sys
-	known_corpus_tokenized.py (in this script's directory)
-
-	----------Parameters:
-	None
-
-	----------Returns:
-	None (content is pushed straight to the global variable named knownCorpus)
-	"""
-	#exec 'For each line of text, concat to string.' then exec 'exec of that string'.
-	exec("stringOfKnownCorpus = '' \nwith open ('known_corpus_tokenized.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownCorpus+=line\nexec(stringOfKnownCorpus)")
+	if isinstance(myList,list):
+		myList.sort()
+		myList = list(myList for myList,_ in itertools.groupby(myList))
+		return myList
+	else:
+		print("\t\t\tremoveDuplicate() was called on a non-list:",str(input))
+		return myList
 def sortLists(myLists,index,order):
     """Takes a list of lists. Returns it, sorted by a given index.
 	----------Dependencies:
@@ -145,41 +207,52 @@ def sortLists(myLists,index,order):
     if order == "largestToSmallest":
     	sortedLists = list(reversed(sortedLists))
     return sortedLists
-def findIndexOfString(string,storedList,indexOne,indexTwo=None):
-	"""Find the index of a string in a list. (Or in a list of lists, once I get around to it.)
+
+#Utilities with external dependencies:
+def backupDB(): #internal dependency: generateUuid()
+	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
 	----------Dependencies:
-	None
-
-	----------Parameters:
-	string = the string you want to find, e.g. 'musical instrument'
-	storedList = the name of the list to search within, e.g. 'knownTerms'
-	indexOne = a number. the index of storedList, to search within. e.g. 0
-	indexTwo = a number. indexTwo exists because I will later overload this function to also hanlde lists of lists.
-
+	generateUuid()
+	import os, import shutil
+	learned_data.db in the folder learned_data
+	
 	----------Returns:
-	A number. The index of the string found in storedList. If the string was not found, returns False.
+	True (unless a fatal error occurs)
 	"""
-	
-	
-	tempStroredList = []
+	print("\tcreating backup of learned_data.db")
+	newFileName = "learned_data_"+str(generateUuid())+".db"
 
-	for i in range(0,len(storedList)):
-		#if the two strings have same first AND last letter AND are the same length...
-		if string[0]==storedList[i][indexOne][0] and string[-1]==storedList[i][indexOne][-1] and len(string)==len(storedList[i][0]): 
-			#save the matching index in tempStroredList
-			tempStroredList.append(i)
+	src_dir= absolute_filepath+"/learned_data"
+	dst_dir= absolute_filepath+"/learned_data/backup_databases"
+	src_file = os.path.join(src_dir, "learned_data.db")
+	shutil.copy(src_file,dst_dir)
 
-	#search tempStoredList for precise matches. 
-	for i in range(0,len(tempStroredList)):
-		storedListIndex = tempStroredList[i]
-		if storedList[storedListIndex][indexOne] == string:
-			return storedListIndex #return the (tempStroredList) index of the first precise match found.
-	
-	#if no match found, return False
-	return False
+	dst_file = os.path.join(dst_dir, "learned_data.db")
+	new_dst_file_name = os.path.join(dst_dir, newFileName)
+	os.rename(dst_file, new_dst_file_name)
+
+	return True
+def infinitize(word,pos=None):
+	pass 
+	# try using textacy, then (via regular expressions) the db and compromise.
 def execDefComp(requestedTerm,wordContext,subject=None,verb=None,do=None,io=None,adjAdv=None):
 	"""	Executes a currentDef() located in the column 'def_comprehensive' in the table 'terms'.
-	This function's query can only return ONE row at a time, from the table 'terms'. Don't pass in any term which could return >1 row!!!
+	Note: This function's query can only return ONE row at a time, from the table 'terms'. Avoid passing in any terms which could return >1 row.
+
+	----------Dependencies:
+	learned_data.db in the folder learned_data
+	
+	----------Parameters:
+	requestedTerm = a string. the term to execute the def_comprehensive of.
+	wordContext = a string. options are: 'evaluate', 'learn', or 'perform'
+	subject = a string. 
+	verb = a string. 
+	do = a string. 
+	io = a string. 
+	adjAdv = a string. 
+
+	----------Returns:
+	whatever the function currentDef returns, for a given term. this function can be found in the column def_comprehensive for a given term in the table terms.
 	"""
 	def printArgs():
 		print("\t\t\t\trequestedTerm=",requestedTerm)
@@ -216,8 +289,280 @@ def execDefComp(requestedTerm,wordContext,subject=None,verb=None,do=None,io=None
 		print("\t\t\tA bad argument was passed to execDefComp(), so no def_comprehensive was found. Returned None. \n\t\t\tArguments passed in:")
 		printArgs()
 		return None
+def orderByPos(templates,words):
+	"""Returns every possible order of the words passed in, which is both the correct length AND has the correct parts of speech.
+	----------Dependencies:
+	None
 
-execDefComp("include","evaluate")
+	----------Parameters:
+	templates = a list of lists containing strings which are parts of speech. findPosTemplates() can provide these templates.
+		Example: [
+			["NOUN", "VERB"],
+			["NOUN", "VERB", "NOUN"],
+		]
+	words = a list of lists. each of the lists should contain a word (infinitized) and it's POS. Can be in any order.
+		Example: [
+			["bird","NOUN"],
+			["duck","NOUN"],
+			["include","VERB"],
+		]
+
+	----------Returns:
+	A list containing all possible arrangements of those words, which match the POS in the templates. The arrangements are grammatical, but have not yet been tested for truth.
+	"""
+	validatedOrders = []
+	
+	#Error handling
+	if templates == None or templates == []:
+		print("\t\t\torderByPos() was called with templates = None or templates = []. Returned None.")
+		return None
+	if words == None or words == []:
+		print("\t\t\torderByPos() was called with words = None or words = []. Returned None.")
+		return None
+		
+	for h in range(0,len(templates)):
+		currentTemplate = templates[h]
+		startOrder = words
+		def compareLen(testList,testTemplate):
+			"""Takes a list. Returns the string '<' or '=' or '>'. """
+			if len(testList) < len(testTemplate):
+				# print("< compareLen")
+				return "<"
+			elif len(testList) == len(testTemplate):
+				# print("= compareLen")
+				return "="
+			else:
+				# print("> compareLen")
+				return ">"
+			### end of compareLen()
+		def comparePOS(testPOS,templatePOS):
+			"""Compares POS in test list, to POS in template list, at the requestedindex only. If they match, returns True.
+			Only test phrases vetted as the correct length ever get passed to this function."""
+			threshold = len(testPOS)
+			correctPOS = 0
+			
+			for p in range(0,len(testPOS)):
+				if testPOS[p][1] == templatePOS[p]:
+					correctPOS += 1
+			
+			if correctPOS >= threshold:
+				# print ("passed the pos threshold")
+				return True
+			else:
+				return False
+			### end of comparePOS()
+		def instance_lenMatch(templateIndex,jOrder,visualizeTabs=''):
+			"""An infinitely recursive function. Appends any orders with the correct length and POS', to validatedOrders"""
+			#break out of infinite loops
+			templateIndex += 1
+			for m in range (0,templateIndex):
+				visualizeTabs += '  '
+			if templateIndex > len(currentTemplate):
+				print("%stemplateIndex=%s:   jOrder=%s" % (visualizeTabs,templateIndex,jOrder))
+				print ("\na possible infinite loop was detected, so an instance_lenMatch() recursive search was terminated.\n")
+				return False
+
+			# show what is going on (for debugging)
+			# print("%stemplateIndex=%s:   jOrder=%s" % (visualizeTabs,templateIndex,jOrder))
+
+			#try adding an element to eval loop.
+			for k in range (0,len(startOrder)):
+				#recreate kOrder (to reset it)
+				kOrder = []
+				for a in range(0,len(jOrder)):
+					kOrder.append(jOrder[a])
+				# templateIndex = 2
+				#print kOrder results
+				kOrder.append(startOrder[k])
+				kCurr = startOrder[k]
+				# print("    kCurr=",kCurr)
+				# print("          ",kOrder)
+				#perform tests
+				lenVsTemplate = compareLen(kOrder,currentTemplate) # test length
+				if lenVsTemplate == '>':
+					# print ("          Too long. Breaking.")
+					break
+				elif lenVsTemplate == '=':
+					# print ("          CORRECT LENGTH")
+					posVSTemplate = comparePOS(kOrder,currentTemplate) # test pos
+					if posVSTemplate == True:
+						# print ("          CORRECT POS\n\n")
+						validatedOrders.append(kOrder)
+				else: # if lenVsTemplate == '<'
+					# print ("          Too short. Search deeper.")
+					instance_lenMatch(templateIndex,kOrder,visualizeTabs='')	
+			### end of instance_lenMatch()
+
+	
+		#Start first eval loop
+		for i in range(0,len(startOrder)):
+			iOrder = [startOrder[i]] #declare iOrder (to reset it)
+			#test for length and pos
+			lenVsTemplate = compareLen(iOrder,currentTemplate) # test length
+			if lenVsTemplate == '>':
+				# print ("          Too long. Breaking.")
+				break
+			elif lenVsTemplate == '=':
+				# print ("          CORRECT LENGTH")
+				posVSTemplate = comparePOS(iOrder,currentTemplate) # test pos
+				if posVSTemplate == True:
+					# print ("          CORRECT POS\n\n")
+					validatedOrders.append(iOrder)
+			else:
+				instance_lenMatch(0,iOrder,'') #start the recursive search
+
+
+	#back to broadest scope of orderByPos()
+	if validatedOrders == []:
+		validatedOrders = None #if empty, return None
+	# else: #Commented out because I'm pretty sure removing duplicates is unnecessary.
+	# 	#Remove duplicates 
+	# 	import itertools 
+	# 	validatedOrders.sort()
+	# 	validatedOrders = list(validatedOrders for validatedOrders,_ in itertools.groupby(validatedOrders))
+	return validatedOrders
+	### end of orderByPos()
+def pullQueryResults():
+	"""Copies the most recent SQLite selection. Should ONLY be called after executing a SQLite query.
+	----------Dependencies:
+	import sqlite3
+	learned_data.db in the folder learned_data
+	the global variables 'dbConn' and 'dbCursor'
+
+	----------Parameters:
+	None
+	----------Returns:
+	a list, or None.
+	"""
+	#pull in whatever the most recent query selected
+	dbData = dbCursor.fetchall() 
+	#put the results into a list
+	listToReturn = []
+	for row in dbData:
+		listToReturn.append(row[0])
+	return listToReturn
+
+	if listToReturn == []: # if no results, return None.
+		return None
+def refreshKnownCorpus():
+	"""Update the global variable 'knownCorpus', from the file known_corpus_tokenized.py.
+	----------Dependencies:
+	import os, import sys
+	known_corpus_tokenized.py (in this script's directory)
+
+	----------Parameters:
+	None
+
+	----------Returns:
+	None (content is pushed straight to the global variable named knownCorpus)
+	"""
+	#exec 'For each line of text, concat to string.' then exec 'exec of that string'.
+	exec("stringOfKnownCorpus = '' \nwith open ('known_corpus_tokenized.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownCorpus+=line\nexec(stringOfKnownCorpus)")
+
+#Utilities with both internal and external dependencies:
+def backupDB(): #internal dependency: generateUuid()
+	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
+	----------Dependencies:
+	generateUuid()
+	import os, import shutil
+	learned_data.db in the folder learned_data
+	
+	----------Returns:
+	True (unless a fatal error occurs)
+	"""
+	print("\tcreating backup of learned_data.db")
+	newFileName = "learned_data_"+str(generateUuid())+".db"
+
+	src_dir= absolute_filepath+"/learned_data"
+	dst_dir= absolute_filepath+"/learned_data/backup_databases"
+	src_file = os.path.join(src_dir, "learned_data.db")
+	shutil.copy(src_file,dst_dir)
+
+	dst_file = os.path.join(dst_dir, "learned_data.db")
+	new_dst_file_name = os.path.join(dst_dir, newFileName)
+	os.rename(dst_file, new_dst_file_name)
+
+	return True
+def determinePOS(termOrList,db=None): #internal dependency: pullQueryResults() 
+	"""Looks up the part of speech of a term (or of list of terms). Returns it as a string (or as a list of strings).
+	----------Dependencies:
+	pullQueryResults() 
+	learned_data.db
+	some compromise list #incomplete
+	some yet-to-be-written textacy contextual analysis. #incomplete
+	
+	----------Parameters:
+	termOrList = The word(s) to look up. A string (or a list of strings). 
+	db = a string. the database to reference. The options are: "learned_data", "compromise", "textacy", and maybe one day "context".
+	
+	----------Returns:
+	the POS (as a string). If none found, returns 'Unknown POS'.
+	"""
+	
+	#If termOrList is a list of strings...
+	if isinstance(termOrList,list):
+
+		if len(termOrList) == 0:
+			print("\t\tdeterminePOS() was pased an empty list. Returned 'Unknown POS'.")
+
+		listWithPos = []
+		for i in range (0,len(termOrList)):
+			iPOS = determinePOS(termOrList[i])
+			listWithPos.append([termOrList[i], iPOS])
+		return listWithPos
+
+	#If termOrList is a string...
+	elif isinstance (termOrList,str):
+		if db == "learned_data":
+			#try to infinitize() the term #incomplete
+			
+			# determine POS 
+			dbCursor.execute("""SELECT partOfSpeech FROM terms WHERE term = ?;""", (termOrList,))
+			pos = pullQueryResults()
+			#proactive error handling
+			if pos == None:
+				print("\t\tdeterminePOS() could not find the POS of '%s'. Returned 'Unknown POS'." % termOrList)
+				return 'Unknown POS' # return a string because thats what other functions are expecting to recieve. No (fatal) harm done if that string never matches anything useful.
+			if len(pos) > 1:
+				print("\t\tdeterminePOS() returned more than one POS for '%s'. It returned only the first result." % termOrList) 
+			#return results
+			return pos[0] #return only the first search result
+	
+		elif db == "compromise":
+			print ("\t\tdeterminePOS() tried to reference compromise.")
+			pos = None #incomplete
+	
+		elif db == "textacy":
+			print ("\t\tdeterminePOS() tried to reference textacy.")
+			pos = None #incomplete
+	
+		elif db == None:
+			#try calling self again with each of the three possible DBs. 
+			result = determinePOS (termOrList,"learned_data") #try learned_data
+			if result == None:
+				result = determinePOS (termOrList,"compromise") #try compromise
+				if result == None:
+					result = determinePOS (termOrList,"textacy") #try textacy
+					if result == None:
+						#give up and return "Unknown POS".
+						print("\t\tdeterminePOS() could not find a POS for '%s' in learned_data, compromise, or textacy. Returned 'Unknown POS'." % termOrList)
+						return("Unknown POS")
+					else:
+						return result
+				else:
+					return result
+			else:
+				return result
+	
+		else:
+			print("A bad 'db' argument value was passed to determinePOS(). It was",str(db))
+
+	#Else (if termOrList is not a string or a list) ...
+	else:
+		print("\t\tdeterminePOS() was passed a bad value - '%s'. Returned 'Unknown POS'." % termOrList)
+		return("Unknown POS")
+
+
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
@@ -657,9 +1002,6 @@ def reflectOnKnownData(): #incomplete
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Known Meanings
 #The core knownMeanings of some (but not all) knownTerms. The terms themselves are stored in known_terms.py. Meanings are recognized patterns, and therefore, some may exist which do not exist as terms in English. They may be represented as pandas DataFrames or something else.
-
-
-
 #   General Utilities for knownMeanings *I may move these up to te Remembering section at some point.
 def isCategoryInstance (instance,finalCategory,defTraitsOnly=False): #function is used in knownMeanings defs
 	"""Returns True if the 'instance' fits in the category 'finalCategory'. Else, returns false.
@@ -1041,70 +1383,355 @@ def scSearchTree(inputTerm):
 	pass #incomplete
 	# find a fast way to pull al terms which metnion the inputTerm anywhere in the knownTerm.
 	#Return a list of the knownTerms indeces which contain matching terms
-def attempt_declarative(scPurpose,scStructure=None,scTopic=None,do=None,io=None):
-	"""Tries to write a declarative sentence.
+
+
+
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  General writing utilities
+def findObject():
+	# SQLite Query
+	# sql_cmd = """SELECT term FROM {}""".format("terms")
+	# dbCursor.execute(sql_cmd)
+	dbCursor.execute("""
+		SELECT term FROM terms WHERE term = "bird"
+	""")
+	# dbCursor.execute("""
+	# 	SELECT term FROM terms 
+	# 	INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
+	# 	WHERE partOfSpeech = "NOUN" AND conceptType = "detail"
+	# """)
+	queryResults = pullQueryResults()
+	return queryResults
+def findVerbs(conceptType=None,subject=None):
+	"""Returns a list of verbs which match the provided criteria.
 	----------Dependencies:
-	knownMeanings (a list), and all functions that it references (in knownMeanings[i][2])
-
+	learned_data.db
 	----------Parameters:
-	scPurpose = a string. The purpose or context of the sentence. Preferably a key in knownMeanings[i][3]. If its not a key, no sentence can be written.
-	scStructure =  a list of the desired sentence scStructure to write. Optional. Useful for answering highly structured questions (e.g. [NOUN, VERB] to respond "Dog barked," in response to the question "Did the dog bark?")
-	scTopic = preferably a string. The term which it wil try to write a sentence about (e.g. "bird"). Optional-but-not-really-optional becuse if there's no topic, then what are you writing a sentence about? Can be any part of speech. Preferably a term defined in knownTerms. 
-	do =  preferably a string. A direct object for the sentence. Optional.
-	io =  preferably a string. An indirect object for the sentence. Optional.
-
+	conceptType = a LIST of strings, not a string.
+	subject = a string
 	----------Returns:
-	A string, if one can be written. Else, returns False.
-	""" #Note: when responding to statements or questions I usually evaluate sentence relevance and structure before searching for content. But I'll figure out where to insert that check, later. Also have not thought about when/how it will ask questions or use imperatives. #incomplete
-	relevantMngIndeces = []
-	scDrafts = []
-
-	# Error handling
-	if sentencesJustWritten >= maxSentencesAtOnce:
-		print ("\n write_sentence() has been terminated because %s / %s maxSentencesAtOnce have been written without user input. Either craft a more specific query or improve the write_sentence() function. \n" % (sentencesJustWritten,maxSentencesAtOnce))
-		return False
-	if scTopic==None:
-		print ("write_sentence() was instructed to write a sentence with scTopic=None... i.e. a sentence about literally anything. Good luck with that.")
-
-	# Search for relevant meanings
-	for i in range (0,len(knownMeanings)):
-		if scPurpose in knownMeanings[i][3]:
-			relevantMngIndeces.append(i)
-	# If no relevant meanings found, return False.
-	if len(relevantMngIndeces) == 0:
-		print ("No '%s' meanings relevant to '%S' were found, so no sentence about it can be written. write_sentence() returned false." % (scPurpose, scTopic))
-		return False
-
-	# For each relevant meaning, try to fit scTopic into sentence, as a subject
-	# for i in range (0,len(relevantMngIndeces)):
-	# 	currentDraft = knownMeanings[i][2][0]("arguments and stuff")
-	# For each relevant meaning, try to fit scTopic into sentence, as a direct object
-	# For each relevant meaning, try to fit scTopic into sentence, using an imperative
-
-	# Determine which sentences are most relevant (e.g. info the user doens't already know, info relevant to current conversation)
-
-	# Test for grammar. Try to correct bad grammar.
-
-	#Concatenate sentence[s] into one string. Return it.
-
+	a list of strings which are appropriate verbs. 
+	or None (rather than []), if none are found.
+	"""
+	possVerbs = []
 	
+	#error handling
+	if isinstance(conceptType,str):
+		conceptType = [conceptType] #in case user forgot to make conceptType a list
+
+	#if only a conceptType was provided
+	if (isinstance(conceptType,list) and subject==None):
+		# find the verbs that match the conceptType
+		for i in range (0,len(conceptType)):
+			# print (conceptType[i],"?")
+			dbCursor.execute("""
+				SELECT term FROM terms 
+				INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
+				WHERE partOfSpeech = "VERB" AND conceptType = ?
+				""", (conceptType[i],))
+			queryResults = pullQueryResults()
+			
+			#append results to possVerbs
+			if isinstance(queryResults,list): #fail gracefully
+				for j in range(0,len(queryResults)):
+					possVerbs.append(queryResults[j])
+
+	#if only a subject was provided
+	elif (conceptType==None and isinstance(subject,str)):
+		# find the verbs that match the subj
+		subjectCateg = ["fly", "animal","winged"] #do a search tree/query to find out what all possible categories are for bird #later
+		for i in range (0,len(subjectCateg)):
+			# print (subjectCateg[i],"?")
+			dbCursor.execute("""
+				SELECT term FROM terms 
+				WHERE partOfSpeech = 'VERB' AND term = ?;
+				""", (subjectCateg[i],))
+			queryResults = pullQueryResults()
+			
+			#append results to possVerbs
+			if isinstance(queryResults,list): #fail gracefully
+				for j in range(0,len(queryResults)):
+					possVerbs.append(queryResults[j])
+
+	#if both conceptType and subject were provided
+	elif (isinstance(conceptType,list) and isinstance(subject,str)):
+		#constrain found set by both
+
+		subjectCateg = ["define"] #do a search tree/query to find out what all possible categories are for bird #later
+
+		for h in range (0,len(subjectCateg)):
+			for i in range (0,len(conceptType)):
+				# print (conceptType[i],"?")
+				dbCursor.execute("""
+					SELECT term FROM terms 
+					INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
+					WHERE partOfSpeech = "VERB" AND term = ? AND conceptType = ?;
+					""", (subjectCateg[h],conceptType[i],))
+				queryResults = pullQueryResults()
+			
+			#append results to possVerbs
+			if isinstance(queryResults,list): #fail gracefully
+				for j in range(0,len(queryResults)):
+					possVerbs.append(queryResults[j])
+
+	#if no arguments were provided, search for ALL verbs
+	elif (conceptType==None and subject==None):
+		dbCursor.execute("""
+			SELECT term FROM terms 
+			WHERE partOfSpeech = 'VERB';
+			""")
+		queryResults = pullQueryResults()
+		
+		#append results to possVerbs
+		if isinstance(queryResults,list): #fail gracefully
+			for j in range(0,len(queryResults)):
+				possVerbs.append(queryResults[j])
+	
+	else: #if none of the above options for the arguments
+		print("\tA bad argument was passed to findVerbs(). Did not search for verbs. Returned None.")
+		return None
+	
+	if possVerbs == []:
+		possVerbs = None
+	return possVerbs
+# also priority communications, e.g. traditional Responses, executing/answering Imperatives, answering Questions, etc.
+	
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Complex writing functions
+def evalScTruth(statement):
+	"""Evaluate whether a statement is true. Attempt to apply evaluation criteria in the following order:
+		1. def_comprehensive
+		2. def_deduced
+		3. I dont remember.
+	----------Dependencies:
+	learned_data.db and maybe others idk.
+	----------Parameters:
+	statement = a list of lists containing Term-POS pairs.
+	----------Returns:
+	a boolean. Or, if there's literally no info, None.
+	"""
+	return statement #### STOPPED HERE FOR LOCAL HD. #incomplete
+def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save possibles.
+	"""Tries to write a sentence with the words passed in. Recursive, but not infinitely recursive.
+	----------Arguments:
+		Can take the following kwargs, all of which are optional:
+			miscList = a list of strings to try and make a sentence out of			
+			conceptType = a string. see the table 'terms_conceptType' for suggested values.
+			posTemplates = a list of lists of strings. Can be obtained using findPosTemplates().
+			st = a boolean. stands for searchTree. Tells the function whether to cascade down category lists while trying to write a sentence (e.g. from duck to bird to vertebrate).
+			n = an integer. the number of times this function has called itself. this should never be entered manually; it's automatic.
+			
+			subject = a string
+			verb = a string
+			... and hopefully more parts of speech one day. Be sure to update the "indvKwargs" and "recursive" sections below, if you add more kwargs. 
+	
+	----------Dependencies:
+		determinePOS()
+		findPosTemplates()
+		orderByPos()
+		removeDuplicates()
+		and any of the following, depending on which kwargs were passed in...
+			findObject()
+			findVerbs()
+			... etc.
+	
+	----------Returns:
+	A list of lists of lists of strings. i.e.: 
+		list = [sentence, sentence, ..., n]
+			sentence = [termGroup, termGroup, ..., n]
+				termGroup = ['term', 'POS']
+	Or None, if nothing could be constructed.
+	""" #Answer questions in some other, unrelated function. Note: when responding to statements or questions I usually evaluate sentence relevance and structure before searching for content.
+	
+	#Pull in the kwargs. Assign empty string kwargs = None.
+	conceptType = kwargs["conceptType"] if ("conceptType" in kwargs) else None
+	miscList = kwargs["miscList"] if ("miscList" in kwargs) else []
+	n = kwargs["n"] if ("n" in kwargs) else 0
+	posTemplates = kwargs["posTemplates"] if ("posTemplates" in kwargs) else None
+	st = kwargs["st"] if ("st" in kwargs) else False #might change default to True. not sure yet.
+	subject = kwargs["subject"] if ("subject" in kwargs) else None
+	verb = kwargs["verb"] if ("verb" in kwargs) else None
+
+	possSc = []
+	# print("~~~~~New Rec.  n =",str(n)) #for debugging
+
+	############## RECURSIVE STUFF - expanding miscList ##############
+
+	if n == 0: 
+		#Handle argument errors.
+		if isinstance(miscList,str):
+			miscList = [miscList] #in case user forgot to make miscList a list
+
+		#infinitize whatever was passed in #incomplete
+
+		#regardless of whether miscList has any content, append each POS kwarg to miscList. Note: POS kwargs are only an issue in the outer-most scope.
+		indvKwargs = [subject,verb]
+		for i in range (0,len(indvKwargs)):
+			if indvKwargs[i] != None:
+				miscList.append(indvKwargs[i])
+
+		#continue on to the non-recursive stuff.
+	
+	if n == 1: #If in first recursion:
+		# print ("\t\t\tExpanding miscList...")
+		#if a subject or conceptType was provided, add all matching verbs.
+		if subject != None or conceptType != None:
+			addMe = findVerbs(conceptType,subject)
+			addMeWithPOS = []
+			if isinstance(addMe,list) and len(addMe) > 0: #fail gracefully
+				addMeWithPOS = determinePOS(addMe) #Add a POS for each word
+				if len(addMeWithPOS) > 0: #fail gracefully
+					for i in range (0,len(addMeWithPOS)):
+						miscList.append(addMeWithPOS[i])
+
+		#if a verb was provided, add all matching subects and objects.
+		if verb != None:
+			#add subjects #incomplete (requires a searchTree.)
+			addMe = []
+			addMeWithPOS = []
+			# also, use the same formatting as above, to add pos, and to fail gracefully.
+			
+			#add objects 
+			addMe = []
+			addMeWithPOS = []
+			#incomplete (findObject() hasn't been written yet.)
+			# also, use the same formatting as above, to add pos, and to fail gracefully.
+
+		#continue on to the non-recursive stuff.
+
+	if n == 2: #If in second recursion:
+		# print ("\t\t\tExpanding miscList even more...")
+		#for every noun in miscList, add every verb/conceptType. no searchTree.
+		verbsToAdd = []
+		for i in range (0,len(miscList)):
+			currTG = miscList[i]
+			if currTG[1] == "NOUN":
+				addMe = findVerbs(conceptType,currTG[0])
+				if isinstance(addMe,list) and len(addMe) > 0: #fail gracefully
+					for j in range (0,len(addMe)):
+						verbsToAdd.append(addMe[j])
+		print("\t\t\tverbsToAdd=",str(verbsToAdd))
+		
+		if len(verbsToAdd) > 0: #fail gracefully
+			for i in range (0,len(verbsToAdd)):
+				addMeWithPOS = []
+				currTerm = verbsToAdd[i]
+				currPOS = determinePOS(currTerm) #Add a POS for each word
+				if len(currPOS) > 0: #fail gracefully. This works, but note that currPOS = str, not a list.
+					addMeWithPOS = [currTerm,currPOS]
+					miscList.append(addMeWithPOS)
+
+		
+		#for every verb, in miscList, run findObject().
+		# incomplete (findObject() hasn't been written yet.)
+
+		#continue on to the non-recursive stuff.
+
+	if n == 3: #If in third recursion:
+		# print ("\t\t\tExpanding miscList to the max!")
+		pass #for every noun in miscList, add every verb/conceptType, using a searchTree to save every 'defining' and 'other' category. #incomplete 
+		
+		#continue on to the non-recursive stuff.
+
+	if n >= 4:
+		return None #Give up.
+
+	############## NON-RECURSIVE STUFF - constructing sentences ##############	
+	####### Construct word arrangements
+	#If a miscList contains any content...
+	if isinstance(miscList,list) and len(miscList) > 0: #fail gracefully
+		if n == 0:
+			miscList = determinePOS(miscList) #Add a POS for each word in miscList
+		
+		#If no posTemplates...
+		if posTemplates == None:
+			#Pull ALL posTemplates
+			reqTemplates = findPosTemplates()
+			results = orderByPos(reqTemplates,miscList) #retrieve grammatical arrangements of the words
+			#save the results
+			if isinstance(results,list) and len(results) > 0: #fail gracefully
+				for i in range(0,len(results)):
+					possSc.append(results[i])
+
+		#If posTemplates...
+		elif isinstance(posTemplates,list):
+			if len(posTemplates) > 0: #fail gracefully
+				#retrieve grammatical arrangements of the words. 
+				results = orderByPos(posTemplates,miscList)
+				#save the results
+				if isinstance(results,list) and len(results) > 0: #fail gracefully
+					for j in range(0,len(results)):
+						possSc.append(results[j])                                                   
+			#In the future, maybe pull templates by their associated tags instead?
+
+		possSc = removeDuplicates(possSc) #eliminate any duplicate sentences
+
+	####### Filter by any requested specifications
+	if len(possSc) > 0: #fail gracefully
+		
+		if isinstance(conceptType,str): # ...filter by conceptType.
+			#Keep only the possible sentences with the requested conceptType.
+			filteredSc = []
+			for i in range (0,len(possSc)): #for each sentence:
+				for j in range (0,len(possSc[i])): #for each word:
+					dbCursor.execute("""SELECT conceptType FROM terms_conceptType WHERE term = ?;""", (possSc[i][j][0],))
+					localCT = pullQueryResults()
+					if isinstance(localCT,list): #fail gracefully
+						for k in range (0,len(localCT)):
+							#if the db conceptType == the requested one, append the term.
+							if localCT[k] == conceptType: 
+								filteredSc.append(possSc[i])
+								break #no need to test the rest of the sentence
+							else:
+								pass
+			possSc = []
+			possSc = filteredSc
+			possSc = removeDuplicates(possSc) #eliminate duplicate sentences
+	
+		if isinstance(subject,str): # ...filter by subject.
+			#Keep only the possible sentences with the requested subject.
+			filteredSc = []
+			for i in range (0,len(possSc)): #for each sentence:
+				for j in range (0,1): #keep it iff first or second word==subject.
+					if possSc[i][j][0] == subject:
+						filteredSc.append(possSc[i])
+						break #no need to test the rest of the sentence
+					else:
+						print ("\t not appended")
+			possSc = []
+			possSc = filteredSc
+		
+		if isinstance(verb,str): # ...filter by verb.
+			print("\t\tfreewrite_declarative() couldn't filter possSc by a verb because that's too complex of a task. No filtering took place.")
+	else:
+		pass #print ("\t\t\tfreewrite_declarative() tried to filter possSc, but it already empty...")
 
 
-#concrete example:
-#make a general statement about bird
-# write_sentence("general",None,"bird")
-
-
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Validating Grammar
-	# #    idk if i'll end up using this. if I do, I'll probably save it in an external .py file in the folder /nlp_resources
-	# grammaticalConstructions = [
-	# 	['NOUN','VERB'],
-	# 	['NOUN','VERB','NOUN'],
-	# 	# etc.
-	# ]
-	# def checkGrammar (potentialSentence):
-	# 	#return true if the POS order in potentialSentence is acceptable, as compared to a POS order in grammaticalConstructions
-	# 	pass #incomplete
+	#if n = 0:
+		#test each possSc for truth
+		# later
+		#Determine which sentences are most relevant (e.g. info the user doens't already know, info relevant to current conversation)
+		# later
+		# scToEval = [] #sentences to evaluate
+	
+	
+	# print("miscList=",str(miscList)) #for debugging
+	# print("possSc=",str(possSc)) #for debugging
+	
+	
+	#Return results if there are any.
+	if len(possSc) > 0:
+		return possSc
+	else:
+		#start next recursion
+		n = n+1
+		moreResults = freewrite_declarative (
+			conceptType = conceptType,
+			miscList = miscList,
+			n = n,
+			posTemplates = posTemplates,
+			st = st,
+			subject = subject,
+			verb = verb)
+		return moreResults
 
 
 
@@ -1116,44 +1743,11 @@ def attempt_declarative(scPurpose,scStructure=None,scTopic=None,do=None,io=None)
 #{}	@@		Main Loop
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
-#This loop exists simply for testing purposes. The finalized file will call functions in a different way.
-cogmod_simple = True
+#This section exists simply for testing purposes. The finalized file will call functions in a different way.
 
-while cogmod_simple == True:
-	inputParsed = False
-	print("""
-\nAVAILABLE COMMANDS: 
-	'abort' (exit without reflecting)
-	'read' (e.g. read https://en.wikipedia.org/wiki/Carpinus_betulus)
-	'read this from source: paragraph' (e.g. read this from wikipedia: A folksinger or folk singer is a person who sings folk music.)
-	'exit'
-	""")
-	cogmod_simple_input = input('--> ')
+availableSc = freewrite_declarative(miscList=["number"])
+print("\n---availableSc:")
+eow(availableSc,True) #prints results from eow()
 
 
-	#exit without closeOut
-	if cogmod_simple_input == 'abort':
-		inputParsed = True
-		cogmod_simple = False
-	
-	#if cogmod_simple_input starts with read
-	if cogmod_simple_input[:5] == 'read ':
-		readingSuccess = False
-		inputParsed = True
-		read(cogmod_simple_input)
-
-	if cogmod_simple_input[:6] == 'match ':
-		inputParsed = True
-		print(cogmod_simple_input[6:])
-		matchTopic(cogmod_simple_input[6:])
-
-	#exit the main loop
-	if cogmod_simple_input == 'exit':
-		inputParsed = True
-		print ("\tinitiating shutdown sequence.")
-		reflectOnKnownData()
-		cogmod_simple = False
-	#handle syntax errors
-	if inputParsed == False:
-		print ("I don't understand '%s'." % cogmod_simple_input)
 print("\n===== Script Ended =====")

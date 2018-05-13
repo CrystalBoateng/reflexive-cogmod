@@ -29,7 +29,7 @@ spaCy 2.0.2 (https://spacy.io/usage/)
 textacy (https://textacy.readthedocs.io/en/latest/index.html)
 DB Browser for SQLite (http://sqlitebrowser.org/) is helpful for manually managing the database, but is not required.
 
-I'm using WinPython 3.5.4Qt5 IDLEX on Windows. I'm not sure if this works on other IDEs and operating systems; you may need to modify the the global variable absolute_filepath on line 17 of MAIN_read_write_recall.py, as well as other filepath information.
+I'm using WinPython 3.5.4Qt5 IDLEX on Windows. I'm not sure if this works on other IDEs and operating systems.
 
 A working internet connection is required for this program to access webpages to read. Using an online proxy server or running this program in a cloud computing environment may cause complications or prevent the page's content from downloading.
 
