@@ -190,7 +190,7 @@ def removeDuplicates(myList):
 		print("\t\t\tremoveDuplicate() was called on a non-list:",str(input))
 		return myList
 def sortLists(myLists,index,order):
-    """Takes a list of lists. Returns it, sorted by a given index.
+	"""Takes a list of lists. Returns it, sorted by a given index.
 	----------Dependencies:
 	from operator import itemgetter
 
@@ -203,10 +203,10 @@ def sortLists(myLists,index,order):
 	the same list you passed in, but sorted.
 	"""
 
-    sortedLists = sorted(myLists, key=itemgetter(index))
-    if order == "largestToSmallest":
-    	sortedLists = list(reversed(sortedLists))
-    return sortedLists
+	sortedLists = sorted(myLists, key=itemgetter(index))
+	if order == "largestToSmallest":
+		sortedLists = list(reversed(sortedLists))
+	return sortedLists
 
 #Utilities with external dependencies:
 def backupDB(): #internal dependency: generateUuid()
@@ -375,7 +375,7 @@ def orderByPos(templates,words):
 				#print kOrder results
 				kOrder.append(startOrder[k])
 				kCurr = startOrder[k]
-				# print("    kCurr=",kCurr)
+				# print("	kCurr=",kCurr)
 				# print("          ",kOrder)
 				#perform tests
 				lenVsTemplate = compareLen(kOrder,currentTemplate) # test length
@@ -588,14 +588,14 @@ def loadHtml(myURL,sourceToLoad="Unknown"):
 		urlContent = response.read()
 		# this can't be converted to a real string, until it's written to disk.
 		with open(absolute_filepath+'/temp_preprocessing_text.txt', 'wb') as f: #wb stands for write as 'bytes'
-		    f.write(urlContent)
+			f.write(urlContent)
 	del urlContent #save some memory
 
 	#Pull from temp_preprocessing_text.txt
 	urlContent_raw = []
 	with open ('temp_preprocessing_text.txt', 'rt', encoding="utf8") as f:
-	    for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
-	    	urlContent_raw.append(line)
+		for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
+			urlContent_raw.append(line)
 	assert len(urlContent_raw) > 0, "Hey, there is no content to pull from temp_preprocessing_text.txt"
 
 	#Parse the HTML 
@@ -687,8 +687,8 @@ def loadHtml(myURL,sourceToLoad="Unknown"):
 
 	#Push to temp_processing_text.txt
 	with open(absolute_filepath+'/temp_processing_text.txt', 'w', encoding='utf-8') as f:
-	    for i in range (0,len(urlContent_ready)):
-		    f.write(urlContent_ready[i])
+		for i in range (0,len(urlContent_ready)):
+			f.write(urlContent_ready[i])
 	del urlContent_ready #save some memory
 def loadText(textToLoad):
 	"""Push a string to temp_processing_text.txt.
@@ -707,11 +707,11 @@ def loadText(textToLoad):
 
 	#Empty temp_preprocessing_text.txt (for consistency, because loadHtml does too).
 	with open(absolute_filepath+'/temp_preprocessing_text.txt', 'w', encoding='utf-8') as f:
-	    f.write("")
+		f.write("")
 
 	#Push textToLoad to temp_processing_text.txt
 	with open(absolute_filepath+'/temp_processing_text.txt', 'w', encoding='utf-8') as f:
-	    f.write(textToLoad)
+		f.write(textToLoad)
 def tokenize(source,title):
 	"""Pull text from temp_processing_text.txt, save its bag of terms and log having read it.
 	----------Dependencies:
@@ -731,16 +731,16 @@ def tokenize(source,title):
 	#Pull text from temp_processing_text.txt
 	textToTokenize = ""
 	with open ('temp_processing_text.txt', 'r', encoding="utf8") as f:
-	    for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
-	    	textToTokenize += line+"\n"
+		for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
+			textToTokenize += line+"\n"
 
 	#generate a unique key for this reading
 	docName = generateUuid()
 	#create the doc and metadata (because tokenization can't happen until the doc is created)
 	metadata = {
-	     'title': title,
-	     'source': source,
-	     'myKey' : docName} 
+		'title': title,
+		'source': source,
+		'myKey' : docName} 
 	doc = textacy.Doc(textToTokenize, metadata=metadata, lang="en") 
 
 	#create a json bag of terms. convert it to a python list.
@@ -769,9 +769,9 @@ def tokenize(source,title):
 	
 	#overwrite previous metadata now that there's a real title
 	metadata = {
-	     'title': title,
-	     'source': source,
-	     'myKey' : docName} 
+		'title': title,
+		'source': source,
+		'myKey' : docName} 
 	doc = textacy.Doc(textToTokenize, metadata=metadata, lang="en") 
 	
 	#save the doc
@@ -789,13 +789,13 @@ def tokenize(source,title):
 	w.close()
 	#add newTopic as the last 2 lines of the file
 	with open(absolute_filepath+'/known_corpus_tokenized.py', 'a', encoding="utf8") as f: #a means append
-	    f.write(newTopic)
+		f.write(newTopic)
 	#update the global variable 'knownCorpus'
 	refreshKnownCorpus()
 
 	# #save the name of this reading (docName) in the file table_of_contents.txt
 	# with open(absolute_filepath+'/known_corpus/table_of_contents.txt', 'a') as f: #a means append
-	#     f.write('\n'+docName)
+	#	 f.write('\n'+docName)
 	print ("I've finished reading about %s." % title)
 def read(readRequest):
 	"""Use the format of a read request, to detrmine the reading's content and metadata. Then call a function to read it.
@@ -973,8 +973,8 @@ def updateDefComp():
 
 		#pull contents of .py file into a string
 		with open (currentFileName, 'r', encoding="utf8") as f:
-		    for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
-		        currentDefAsString += line+"\n"
+			for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
+				currentDefAsString += line+"\n"
 
 		#push the string to the database
 		dbCursor.execute("""UPDATE terms SET def_comprehensive = ? WHERE key = ? """, (currentDefAsString,currentKey,))
@@ -1153,12 +1153,12 @@ def isDefiningCategory (instance,finalCategory): #function is used in knownMeani
 	output = isCategoryInstance(instance,finalCategory,True)
 	return output
 
-#   Definitions of knownMeanings (storage)               NOTES:
-    # -None of these meanings should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py. Instead these terms should be concepts which cannot be described using a platonic ideal.
-    # -All of these functions are overloaded: 
-	    # whenever wordContext == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
-	    # whenever wordContext == "learn", the function will attempt to integrate the input information, into known_terms.py; 
-	    # whenever wordContext == "perform", the function will attempt to perform the verb/become the adjective/perform the adverb/etc; 
+#   Definitions of knownMeanings (storage)			 NOTES:
+	# -None of these meanings should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py. Instead these terms should be concepts which cannot be described using a platonic ideal.
+	# -All of these functions are overloaded: 
+		# whenever wordContext == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
+		# whenever wordContext == "learn", the function will attempt to integrate the input information, into known_terms.py; 
+		# whenever wordContext == "perform", the function will attempt to perform the verb/become the adjective/perform the adverb/etc; 
 def meaning_include(wordContext,myCategory,myWord,indirectObject):
 	"""Defines the core meaning of the term "include". 
 	----------Dependencies:
@@ -1198,11 +1198,11 @@ def meaning_include(wordContext,myCategory,myWord,indirectObject):
 
 	# if wordContext is 'learn':
 	# if wordContext == "perform":
-	#    check if the myCategory already exists as an entry in knownTerms. if so, pass. else, create it. 
-	#    append myWord to its index 3.
-	#    When done reading the whole user input... (i.e., not in this function)
-	#        pushToDisk(knownTerms)
-	#        refreshKnownTerms()
+	#	check if the myCategory already exists as an entry in knownTerms. if so, pass. else, create it. 
+	#	append myWord to its index 3.
+	#	When done reading the whole user input... (i.e., not in this function)
+	#		pushToDisk(knownTerms)
+	#		refreshKnownTerms()
 
 	# if wordContext is 'perform':
 	if wordContext == "perform":
@@ -1273,11 +1273,11 @@ def meaning_define(wordContext,subject,directObject):
 	return("%s is characterized by %s." % (subject, myDefCats)) # this marks the exact moment when I realized I should've used a SQL database.
 
 	# if wordContext is 'learn'
-	#    check if the directObject already exists as an entry in knownTerms. if so, pass. else, create it. 
-	#    append subject to its index 2.
-	#    When done reading the whole user input... (i.e., not in this function)
-	#        pushToDisk(knownTerms)
-	#        refreshKnownTerms()
+	#	check if the directObject already exists as an entry in knownTerms. if so, pass. else, create it. 
+	#	append subject to its index 2.
+	#	When done reading the whole user input... (i.e., not in this function)
+	#		pushToDisk(knownTerms)
+	#		refreshKnownTerms()
 
 	# if wordContext is 'evaluate':
 	if isDefiningCategory(directObject,subject) == True:
@@ -1361,7 +1361,7 @@ def meaning_longer(wordContext,subject,comparedObject):
 		return False
 
 #   Handler for knownMeanings 
-    # This determines which definitions to call. If all of the called functions return True, then the term is applicable. Unfortunately this list can't be stored in a separate file, or else it can't access knownTerms.
+	# This determines which definitions to call. If all of the called functions return True, then the term is applicable. Unfortunately this list can't be stored in a separate file, or else it can't access knownTerms.
 knownMeanings = [ 
 	# [ each line contains...
 		# "the term", 
@@ -1659,7 +1659,7 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 				#save the results
 				if isinstance(results,list) and len(results) > 0: #fail gracefully
 					for j in range(0,len(results)):
-						possSc.append(results[j])                                                   
+						possSc.append(results[j])
 			#In the future, maybe pull templates by their associated tags instead?
 
 		possSc = removeDuplicates(possSc) #eliminate any duplicate sentences
