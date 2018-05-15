@@ -7,7 +7,7 @@ import shutil # for creating database backups ***NEW
 # absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this script.
 dbConn = sqlite3.connect('learned_data.db')
 dbCursor = dbConn.cursor()
-dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
+# dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
 def generateUuid(order="None"):
 	"""Generate a reasonably unique ID string based on date and time.
 	----------Dependencies:
@@ -182,7 +182,11 @@ def populateTable(table):
 			('26055ed2_2018-04-08_17-27', "number", "NOUN",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
 			('2e8be200_2018-04-08_17-27', "longer", "ADJ",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
 			('2883e6a9_2018-04-08_17-27', "speak of the devil and he shall appear", "SENTENCE",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
-			('aad14126_2018-04-08_17-27', "hello", "INTJ",None,None,None,None,None,None,None,None,None,None,None,None,None,None,"hello")
+			('aad14126_2018-04-08_17-27', "hello", "INTJ",None,None,None,None,None,None,None,None,None,None,None,None,None,None,"hello"),
+			('tempryky_2018-05-13_23-01', "abstraction", "NOUN",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
+			('31415926_2018-05-13_07-56', "pi", "NOUN",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
+			('symbol00_2018-05-13_23-01', "symbol", "NOUN",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None),
+			('isableto_2018-04-08_17-27', "can", "VERB",None,None,None,"was able to","can","will be able to","had been able to",None,None,None,"been able to","being able to","could",None,None)
 		]
 		dbCursor.executemany('insert into terms values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', rowsToInsert)
 		dbConn.commit()
@@ -233,7 +237,10 @@ def populateTable(table):
 			("495cc279_2018-04-08_18-24", "06339b16_2018-04-08_17-27", "aquatic","live in water"),
 			("fb38bcaa_2018-04-08_18-24", "f71e490c_2018-04-08_17-27", "define","describe"),
 			("b510c436_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","concept"),
-			("9025dbac_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "longer","comparative")
+			("9025dbac_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "longer","comparative"),
+			("f6b3e0e6_2018-04-08_18-24", "symbol00_2018-05-13_23-01", "symbol","abstraction"),
+			("pinumber_2018-05-13_19-26", "31415926_2018-05-13_07-56", "pi","number"),
+			("irationl_2018-05-13_19-26", "31415926_2018-05-13_07-56", "pi","number")
 		]
 		dbCursor.executemany('insert into terms_definingCateg values (?,?,?,?)', rowsToInsert)
 
@@ -245,7 +252,6 @@ def populateTable(table):
 			("88fbca4a_2018-04-08_18-24", "f71e490c_2018-04-08_17-27", "define","state"),
 			("b3a4cd72_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","symbol"),
 			("b2da49a4_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","word"),
-			("f6b3e0e6_2018-04-08_18-24", "26055ed2_2018-04-08_17-27", "number","abstraction"),
 			("343cbd9e_2018-04-08_18-24", "2e8be200_2018-04-08_17-27", "longer","long")
 		]
 		dbCursor.executemany('insert into terms_otherCateg values (?,?,?,?)', rowsToInsert)
@@ -347,12 +353,12 @@ def execDefComp(requestedKey,wordContext,subject=None,verb=None,do=None,io=None,
 
 
 ###################@@# Do The Things #########
-createTables()
-# backupDB()
-populateTable('terms')
-populateTable('terms_definingCateg')
-populateTable('terms_otherCateg')
-populateTable('terms_conceptType')
+backupDB()
+# createTables()
+# populateTable('terms')
+# populateTable('terms_definingCateg')
+# populateTable('terms_otherCateg')
+# populateTable('terms_conceptType')
 
 # updateDefComp()
 # execDefComp("517223ec_2018-04-08_17-27","declarative","authors",None,"mark twain")
@@ -391,7 +397,7 @@ print("=========Done\n")
 		# pastPlural --> past --> present --> term
 		
 		# future --> present --> term
-	# Info on contructing verbs can be found here: https://www.brighthubeducation.com/english-homework-help/39260-the-english-verb-system-for-esl-students/#imgn_1
+	# Info on contructing verbs can be found here: https://www.brighthubeducation.com/english-homework-help/39260-the-english-verb-system-for-esl-students
 
 	# during reflection, deduceRegularConj: for each empty slot,  calculate plurals, presentParticiples (-ing), pastParticiples (-en), past tenses for verbs ending in e (-ed), and the subjunctives (were PastParticipling).
 
