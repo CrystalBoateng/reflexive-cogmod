@@ -6,6 +6,8 @@
 
 #import dependencies
 from datetime import datetime #to generate UUIDs
+from learned_data.util_findCategories import * #to link terms
+from learned_data.util_isCategoryInstance import * #to evaluate terms' category relationships
 from operator import itemgetter #to sort lists of lists
 import itertools # to removeDuplicates()
 import json #to read doc metadata
@@ -25,7 +27,7 @@ maxSentencesAtOnce = 10 #limit how many sentences can be written without user in
 dbConn = sqlite3.connect(absolute_filepath+'/learned_data/learned_data.db') #to connect to database
 dbCursor = dbConn.cursor() #to connect to database
 # dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
-# from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs #itll be a long time before this can learn verbs on its own
+# from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs #it'll be a long time before this can learn verbs on its own.
 
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
@@ -209,29 +211,6 @@ def sortLists(myLists,index,order):
 	return sortedLists
 
 #Utilities with external dependencies:
-def backupDB(): #internal dependency: generateUuid()
-	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
-	----------Dependencies:
-	generateUuid()
-	import os, import shutil
-	learned_data.db in the folder learned_data
-	
-	----------Returns:
-	True (unless a fatal error occurs)
-	"""
-	print("\tcreating backup of learned_data.db")
-	newFileName = "learned_data_"+str(generateUuid())+".db"
-
-	src_dir= absolute_filepath+"/learned_data"
-	dst_dir= absolute_filepath+"/learned_data/backup_databases"
-	src_file = os.path.join(src_dir, "learned_data.db")
-	shutil.copy(src_file,dst_dir)
-
-	dst_file = os.path.join(dst_dir, "learned_data.db")
-	new_dst_file_name = os.path.join(dst_dir, newFileName)
-	os.rename(dst_file, new_dst_file_name)
-
-	return True
 def infinitize(word,pos=None):
 	pass 
 	# try using textacy, then (via regular expressions) the db and compromise.
@@ -273,7 +252,7 @@ def execDefComp(requestedTerm,wordContext,subject=None,verb=None,do=None,io=None
 			printArgs()
 			return None
 		if len(dbData) > 1:
-			print("\t\t\tA bad argument was passed to execDefComp(), resulting in mulltiple results. Only the first result was used.\n\t\t\tArguments passed in:")
+			print("\t\t\tA bad argument was passed to execDefComp(), resulting in mulltiple files found. Only the first result was used.\n\t\t\tArguments passed in:")
 			printArgs()
 
 		#import the currentDef as string
@@ -459,6 +438,7 @@ def refreshKnownCorpus():
 	#exec 'For each line of text, concat to string.' then exec 'exec of that string'.
 	exec("stringOfKnownCorpus = '' \nwith open ('known_corpus_tokenized.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownCorpus+=line\nexec(stringOfKnownCorpus)")
 
+
 #Utilities with both internal and external dependencies:
 def backupDB(): #internal dependency: generateUuid()
 	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
@@ -503,7 +483,7 @@ def determinePOS(termOrList,db=None): #internal dependency: pullQueryResults()
 	if isinstance(termOrList,list):
 
 		if len(termOrList) == 0:
-			print("\t\tdeterminePOS() was pased an empty list. Returned 'Unknown POS'.")
+			print("\t\tdeterminePOS() was passed an empty list. Returned 'Unknown POS'.")
 
 		listWithPos = []
 		for i in range (0,len(termOrList)):
@@ -519,21 +499,26 @@ def determinePOS(termOrList,db=None): #internal dependency: pullQueryResults()
 			# determine POS 
 			dbCursor.execute("""SELECT partOfSpeech FROM terms WHERE term = ?;""", (termOrList,))
 			pos = pullQueryResults()
-			#proactive error handling
-			if pos == None:
-				print("\t\tdeterminePOS() could not find the POS of '%s'. Returned 'Unknown POS'." % termOrList)
+			#proactive error handling. return results.
+			if isinstance(pos,list):
+				if len(pos) == 1:
+					return pos[0] #return the result. this is the most common scenario.
+				elif len(pos) > 1:
+					print("\t\t\tdeterminePOS() returned more than one POS for '%s'. It returned only the first result." % termOrList) 
+					return pos[0] #return only the first search result
+			elif pos == None or pos == []:
+				print("\t\t\tdeterminePOS() could not find the POS of '%s'. Returned 'Unknown POS'." % termOrList)
 				return 'Unknown POS' # return a string because thats what other functions are expecting to recieve. No (fatal) harm done if that string never matches anything useful.
-			if len(pos) > 1:
-				print("\t\tdeterminePOS() returned more than one POS for '%s'. It returned only the first result." % termOrList) 
-			#return results
-			return pos[0] #return only the first search result
-	
+			else:
+				print("\t\t\tdeterminePOS() retreived a very bad value for '%s'. Returned 'Unknown POS'." % termOrList)
+				return 'Unknown POS' # return a string because thats what other functions are expecting to recieve. No (fatal) harm done if that string never matches anything useful.
+
 		elif db == "compromise":
-			print ("\t\tdeterminePOS() tried to reference compromise.")
+			# print ("\t\t\tdeterminePOS() tried to reference compromise.")
 			pos = None #incomplete
 	
 		elif db == "textacy":
-			print ("\t\tdeterminePOS() tried to reference textacy.")
+			# print ("\t\t\tdeterminePOS() tried to reference textacy.")
 			pos = None #incomplete
 	
 		elif db == None:
@@ -545,7 +530,7 @@ def determinePOS(termOrList,db=None): #internal dependency: pullQueryResults()
 					result = determinePOS (termOrList,"textacy") #try textacy
 					if result == None:
 						#give up and return "Unknown POS".
-						print("\t\tdeterminePOS() could not find a POS for '%s' in learned_data, compromise, or textacy. Returned 'Unknown POS'." % termOrList)
+						print("\t\t\tdeterminePOS() couldn't find a POS for '%s' anywhere." % termOrList)
 						return("Unknown POS")
 					else:
 						return result
@@ -980,7 +965,8 @@ def updateDefComp():
 		dbCursor.execute("""UPDATE terms SET def_comprehensive = ? WHERE key = ? """, (currentDefAsString,currentKey,))
 	dbConn.commit()
 def deduceTerms(): #incomplete
-	#expand knownTerms by creating new netries from any duplicate categories
+	#expand number of terms known, by creating new entries from any duplicate categories (e.g. color from entries with the category 'color')
+	#could do the same with topics
 	pass 
 def deleteNestedDuplicates(): #incomplete
 	pass #delete duplicate entries and categories from knownTerms (or knownCorpus). pushToDisk() when done.
@@ -991,6 +977,8 @@ def reflectOnKnownData(): #incomplete
 	# If no argument is passed in, operates on every available argument, one at a time.
 	#pushToDisk(knownTerms or knownCorpus or whatever other knownLibrary)
 	pass 
+#also: for every category that's not already a term, make it a term. then when reading, if the word is used, textacy can infer the POS. it can then be assigned. from one sample, yes. it can be validated periodically, later.
+#also: expand findVerbs() somehow, to at least include the verb 'include' for all categories
 
 
 
@@ -1003,189 +991,6 @@ def reflectOnKnownData(): #incomplete
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Known Meanings
 #The core knownMeanings of some (but not all) knownTerms. The terms themselves are stored in known_terms.py. Meanings are recognized patterns, and therefore, some may exist which do not exist as terms in English. They may be represented as pandas DataFrames or something else.
 #   General Utilities for knownMeanings *I may move these up to te Remembering section at some point.
-def isCategoryInstance (instance,finalCategory,defTraitsOnly=False):
-	"""Returns True if the 'instance' fits in the category 'finalCategory'. Else, returns false.
-	----------Dependencies:
-	learned_data.py, which is in the folder learned_data
-
-	----------Parameters:
-	instance = a string, such as 'guitar'
-	finalCategory = a string, such as 'musical instrument'
-	defTraitsOnly = only search for the categories that define the object. To do this, please use the function isDefiningCategory() instead.
-
-	----------Returns:
-	a boolean.
-	"""
-
-	def instance_searchTree(instance,finalCategory,instanceSearchesPerformed=0,visualizeTabs='',defTraitsOnly=False):
-		"""An infinitely recursive function. Returns True if the 'instance' fits in the category 'finalCategory'. Else, returns false.
-		This function gets called only by isCategoryInstance(). It should not be called directly.
-		
-		----------Dependencies:
-		learned_data.py, which is in the folder learned_data
-
-		----------Parameters:
-		instance = a string, such as 'guitar'
-		finalCategory = a string, such as 'musical instrument'
-		instanceSearchesPerformed = an autmoatically-generated integer, to track how many layers of this function have been called. Terminates the search after 21 layers, to halt infinite loops.
-		visualizeTabs = a string conatining three spaces, to help with visualizing layers, for debugging.
-		defTraitsOnly (optional boolean) = only search for the categories that define the object (terms_definingCateg table), and not for others (terms_otherCateg table).
-
-		----------Returns:
-		a boolean.
-		"""
-
-		#break out of infinite loops
-		instanceSearchesPerformed += 1
-		if instanceSearchesPerformed >= 20:
-			print("%sinstanceSearchesPerformed=%s:   instance=%s   finalCategory=%s" % (visualizeTabs,instanceSearchesPerformed,instance,finalCategory))
-			print ("\nWhile searching for instances of a category, a possible infinite loop was detected. 21 iterations were reached, so the search was terminated.\n")
-			return False
-		
-		for i in range (0,instanceSearchesPerformed):
-			visualizeTabs += '  '
-		print("%s%s:   instance=%s   finalCategory=%s" % (visualizeTabs,instanceSearchesPerformed,instance,finalCategory))
-
-		#find the key of the 'instance' term
-		dbCursor.execute("""SELECT key FROM terms WHERE term = ?;""", (instance,)) #homonyms will break this #incomplete
-		instanceKey = pullQueryResults()
-		print("instanceKey=",str(instanceKey))
-
-		if isinstance(instanceKey,list) and len(instanceKey)>0: #fail gracefully
-			instanceKey = instanceKey[0]
-
-			#loop through defining categories (recursive)
-			dbCursor.execute("""SELECT definingCateg FROM terms_definingCateg WHERE terms_key = ?;""", (instanceKey,))
-			iDefCats = pullQueryResults()
-			#add grace
-			for j in range(0,len(iDefCats)):
-				print("%s (j=%s)" % (visualizeTabs,j))
-				print(visualizeTabs+" instance is:",iDefCats[j])
-				if iDefCats[j] == finalCategory: #if the finalCategory matches
-					print("***MATCH!***")
-					return True
-				else:
-					dbCursor.execute("""SELECT definingCateg FROM terms_definingCateg WHERE term = ?;""", (iDefCats[j],))
-					moreIDC = pullQueryResults()
-					if isinstance(moreIDC,list) and len(moreIDC)>0: #elif the category is a category of its own
-						if instance_searchTree(iDefCats[j],finalCategory,instanceSearchesPerformed,visualizeTabs,defTraitsOnly) == True:
-							print("***MATCH!***")
-							return True
-					else: #elif the finalCategory is NOT a finalCategory of its own
-						pass #go to the next finalCategory in the list
-
-			#loop through the other categories (recursive) (optional)
-			if defTraitsOnly == False: #if user requested ALL relevant categories, not just defining ones.
-				print("defTraitsOnly was false")
-				dbCursor.execute("""SELECT otherCateg FROM terms_otherCateg WHERE terms_key = ?;""", (instanceKey,))
-				iOthCats = pullQueryResults()
-				#add grace
-				for j in range(0,len(iOthCats)):
-					print("%s (j=%s)" % (visualizeTabs,j))
-					print(visualizeTabs+" instance is:",iOthCats[j])
-					if iOthCats[j] == finalCategory: #if the finalCategory matches
-						print("***MATCH!***")
-						return True
-					else:
-						dbCursor.execute("""SELECT otherCateg FROM terms_otherCateg WHERE term = ?;""", (iOthCats[j],))
-						moreIOC = pullQueryResults()
-						if isinstance(moreIOC,list) and len(moreIOC)>0: #elif the category is a category of its own
-							if instance_searchTree(iOthCats[j],finalCategory,instanceSearchesPerformed,visualizeTabs,defTraitsOnly) == True:
-								print("***MATCH!***")
-								return True
-						else: #elif the finalCategory is NOT a finalCategory of its own
-							pass #go to the next finalCategory in the list
-
-			return False # if no match was found at any point in this iteration of this function, return false
-
-	### end of instance_searchTree()
-
-	# print("instance,finalCategory:",instance,finalCategory)
-	instanceSearchesPerformed = 0 # to detect infinite loops
-	visualizeTabs = ''
-
-	#verify that the 'instance' is known
-	dbCursor.execute("""SELECT key FROM terms WHERE term = ?;""", (instance,))
-	termKey = pullQueryResults()
-	if isinstance(termKey,list) and len(termKey)>0:
-		termKey = termKey[0]
-		print("termKey=",str(termKey))
-	else:
-		print ("\t\t\tisCategoryInstance() can't find '%s' in the database. Returned None." % instance)
-		return None
-
-
-	#search starting within defining categories (but optionally including the other categories).
-	dbCursor.execute("""SELECT definingCateg FROM terms_definingCateg WHERE terms_key = ?;""", (termKey,))
-	defCats = pullQueryResults()
-	#add grace
-	for i in range(0,len(defCats)):
-		instanceSearchesPerformed += 1
-		print(str(instanceSearchesPerformed)+":",defCats[i])
-		if defCats[i] == finalCategory: #if the finalCategory matches
-			print("***MATCH!***")
-			return True
-		else:
-			dbCursor.execute("""SELECT definingCateg FROM terms_definingCateg WHERE term = ?;""", (defCats[i],))
-			moreDC = pullQueryResults()
-			if isinstance(moreDC,list) and len(moreDC)>0: #elif the finalCategory is a finalCategory of its own
-				print("starting a first recursive search.")
-				if defTraitsOnly == True: #search within defining categories only
-					if instance_searchTree(defCats[i],finalCategory,instanceSearchesPerformed,'',True) == True:
-						print("***MATCH!***")
-						return True
-				elif defTraitsOnly == False: #search within all relevant categories
-					if instance_searchTree(defCats[i],finalCategory,instanceSearchesPerformed,'') == True:
-						print("***MATCH!***")
-						return True
-			else: #elif the finalCategory is NOT a finalCategory of its own
-				pass #go to the next finalCategory in the list
-
-
-	#search starting within the other categories (optional)
-	if defTraitsOnly == False:
-		dbCursor.execute("""SELECT otherCateg FROM terms_otherCateg WHERE terms_key = ?;""", (termKey,))
-		othCats = pullQueryResults()
-		#add grace
-		for i in range(0,len(othCats)):
-			instanceSearchesPerformed += 1
-			print(str(instanceSearchesPerformed)+":",othCats[i])
-			if othCats[i] == finalCategory: #if the finalCategory matches
-				print("***MATCH!***")
-				return True
-			else:
-				dbCursor.execute("""SELECT otherCateg FROM terms_otherCateg WHERE term = ?;""", (othCats[i],))
-				moreOC = pullQueryResults()
-				if isinstance(moreOC,list) and len(moreOC)>0: #elif the finalCategory is a finalCategory of its own
-					print("starting first 'other' recursive search.")
-					if instance_searchTree(othCats[i],finalCategory,instanceSearchesPerformed,'',False) == True:
-						print("***MATCH!***")
-						return True
-				else:
-					pass #go to the next finalCategory in the list
-
-	#somehwere in/above here, add a place to store and check for negations!!! exceptions can be up to 49% of a category. example: penguins are birds but they cannot fly.
-
-
-	return False
-def isDefiningCategory (instance,finalCategory):
-	"""Returns True if 'finalCategory' is one of the defining traits of 'instance'. Else, returns false.
-	----------Dependencies:
-	isCategoryInstance()
-		known_terms.py (in this script's directory)
-		findIndexOfString()
-
-	----------Parameters:
-	instance = a string, such as 'guitar'
-	finalCategory = a string, such as 'musical instrument'
-
-	----------Returns:
-	a boolean.
-	"""
-
-	output = isCategoryInstance(instance,finalCategory,True)
-	return output
-
 #   Definitions of knownMeanings (storage)			 NOTES:
 	# -None of these meanings should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py. Instead these terms should be concepts which cannot be described using a platonic ideal.
 	# -All of these functions are overloaded: 
@@ -1420,32 +1225,76 @@ def scSearchTree(inputTerm):
 
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  General writing utilities
-def findObject():
-	# SQLite Query
-	# sql_cmd = """SELECT term FROM {}""".format("terms")
-	# dbCursor.execute(sql_cmd)
-	dbCursor.execute("""
-		SELECT term FROM terms WHERE term = "bird"
-	""")
-	# dbCursor.execute("""
-	# 	SELECT term FROM terms 
-	# 	INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
-	# 	WHERE partOfSpeech = "NOUN" AND conceptType = "detail"
-	# """)
-	queryResults = pullQueryResults()
-	return queryResults
+def findObject(conceptType=None): #currently not being used at all
+	"""Returns a list of objects which can be taken by a verb.
+	----------Dependencies:
+	learned_data.db
+	----------Parameters:
+	conceptType = a list of strings. see the table 'terms_conceptType' for suggested string values.
+	*verb is not a parameter. because in English, pretty much any verb can take any noun as an object. I think.
+	----------Returns:
+	a list of strings which are appropriate verbs. 
+	or None (rather than []), if none are found.
+	"""
+	possObj = []
+
+	def appQR(qr):
+		"""Append queryResults to possObj."""
+		if isinstance(qr,list) and len(qr)>0: #fail gracefully
+			for j in range(0,len(qr)):
+				possObj.append(qr[j])	
+	
+	#error handling
+	if isinstance(conceptType,str):
+		conceptType = [conceptType] #in case user forgot to make conceptType a list
+
+	#if only a conceptType was provided
+	if isinstance(conceptType,list):
+		# find the nouns that match the conceptType
+		for i in range (0,len(conceptType)):
+			# print (conceptType[i],"?")
+			dbCursor.execute("""
+				SELECT terms.term FROM terms
+				INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
+				WHERE partOfSpeech = "NOUN" AND conceptType = ?
+				""", (conceptType[i],))
+			queryResults = pullQueryResults()
+			appQR(queryResults) #append results to possObj
+
+	#if no arguments were provided, search for ALL nouns
+	elif conceptType==None:
+		dbCursor.execute("""
+			SELECT term FROM terms
+			WHERE partOfSpeech = 'NOUN';
+			""")
+		queryResults = pullQueryResults()
+		appQR(queryResults) #append results to possObj
+	
+	else: #if none of the above options for the arguments
+		print("\t\t\tA bad argument '%s' was passed to possObj(). Did not search for nouns. Returned None." % str(conceptType))
+		return None
+	
+	if possObj == []:
+		possObj = None
+	return possObj
 def findVerbs(conceptType=None,subject=None):
 	"""Returns a list of verbs which match the provided criteria.
 	----------Dependencies:
 	learned_data.db
 	----------Parameters:
-	conceptType = a LIST of strings, not a string.
+	conceptType = a list of strings. see the table 'terms_conceptType' for suggested string values.
 	subject = a string
 	----------Returns:
 	a list of strings which are appropriate verbs. 
 	or None (rather than []), if none are found.
 	"""
 	possVerbs = []
+
+	def appQR(qr):
+		"""Append queryResults to possVerbs."""
+		if isinstance(qr,list) and len(qr)>0: #fail gracefully
+			for j in range(0,len(qr)):
+				possVerbs.append(qr[j])	
 	
 	#error handling
 	if isinstance(conceptType,str):
@@ -1457,75 +1306,59 @@ def findVerbs(conceptType=None,subject=None):
 		for i in range (0,len(conceptType)):
 			# print (conceptType[i],"?")
 			dbCursor.execute("""
-				SELECT term FROM terms 
+				SELECT terms.term FROM terms
 				INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
 				WHERE partOfSpeech = "VERB" AND conceptType = ?
 				""", (conceptType[i],))
 			queryResults = pullQueryResults()
-			
-			#append results to possVerbs
-			if isinstance(queryResults,list): #fail gracefully
-				for j in range(0,len(queryResults)):
-					possVerbs.append(queryResults[j])
+			appQR(queryResults) #append results to possVerbs
 
 	#if only a subject was provided
 	elif (conceptType==None and isinstance(subject,str)):
 		# find the verbs that match the subj
-		subjectCateg = ["fly", "animal","winged"] #do a search tree/query to find out what all possible categories are for bird #later
+		subjectCateg = findCategories(subject)
 		for i in range (0,len(subjectCateg)):
 			# print (subjectCateg[i],"?")
 			dbCursor.execute("""
-				SELECT term FROM terms 
+				SELECT term FROM terms
 				WHERE partOfSpeech = 'VERB' AND term = ?;
 				""", (subjectCateg[i],))
 			queryResults = pullQueryResults()
-			
-			#append results to possVerbs
-			if isinstance(queryResults,list): #fail gracefully
-				for j in range(0,len(queryResults)):
-					possVerbs.append(queryResults[j])
+			appQR(queryResults) #append results to possVerbs
 
 	#if both conceptType and subject were provided
 	elif (isinstance(conceptType,list) and isinstance(subject,str)):
 		#constrain found set by both
-
-		subjectCateg = ["define"] #do a search tree/query to find out what all possible categories are for bird #later
-
+		subjectCateg = findCategories(subject)
 		for h in range (0,len(subjectCateg)):
 			for i in range (0,len(conceptType)):
 				# print (conceptType[i],"?")
 				dbCursor.execute("""
-					SELECT term FROM terms 
+					SELECT terms.term FROM terms
 					INNER JOIN terms_conceptType on terms_conceptType.terms_key = terms.key
-					WHERE partOfSpeech = "VERB" AND term = ? AND conceptType = ?;
+					WHERE partOfSpeech = "VERB" AND terms.term = ? AND conceptType = ?;
 					""", (subjectCateg[h],conceptType[i],))
 				queryResults = pullQueryResults()
-			
-			#append results to possVerbs
-			if isinstance(queryResults,list): #fail gracefully
-				for j in range(0,len(queryResults)):
-					possVerbs.append(queryResults[j])
+				appQR(queryResults) #append results to possVerbs
 
 	#if no arguments were provided, search for ALL verbs
 	elif (conceptType==None and subject==None):
 		dbCursor.execute("""
-			SELECT term FROM terms 
+			SELECT term FROM terms
 			WHERE partOfSpeech = 'VERB';
 			""")
 		queryResults = pullQueryResults()
-		
-		#append results to possVerbs
-		if isinstance(queryResults,list): #fail gracefully
-			for j in range(0,len(queryResults)):
-				possVerbs.append(queryResults[j])
+		appQR(queryResults) #append results to possVerbs
 	
 	else: #if none of the above options for the arguments
-		print("\tA bad argument was passed to findVerbs(). Did not search for verbs. Returned None.")
+		print("\t\t\tA bad argument was passed to findVerbs(). Did not search for verbs. Returned None.")
+		print("\t\t\t"+str(conceptType)+", "+str(subject))
 		return None
 	
 	if possVerbs == []:
 		possVerbs = None
 	return possVerbs
+
 # also priority communications, e.g. traditional Responses, executing/answering Imperatives, answering Questions, etc.
 	
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Complex writing functions
@@ -1561,8 +1394,10 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 		findPosTemplates()
 		orderByPos()
 		removeDuplicates()
+		findCategories(), which is located in learned_data/util_findCategories.py
+		isCategoryInstance(), which is located in learned_data/util_isCategoryInstance.py
 		and any of the following, depending on which kwargs were passed in...
-			findObject()
+			findObject() #this one's currently not being used, actually
 			findVerbs()
 			... etc.
 	
@@ -1589,13 +1424,16 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 	############## RECURSIVE STUFF - expanding miscList ##############
 
 	if n == 0: 
-		#Handle argument errors.
+		print("\tfreewrite_declarative()") #for debugging
+		#Handle bad arguments.
 		if isinstance(miscList,str):
 			miscList = [miscList] #in case user forgot to make miscList a list
 
-		#infinitize whatever was passed in #incomplete
+		#make all arguments lowercase #incomplete
 
-		#regardless of whether miscList has any content, append each POS kwarg to miscList. Note: POS kwargs are only an issue in the outer-most scope.
+		#infinitize all arguments #incomplete
+
+		#regardless of whether miscList has any content, append each POS kwarg to miscList. Note: POS kwargs can be ignored whenever we're not in the outer-most scope.
 		indvKwargs = [subject,verb]
 		for i in range (0,len(indvKwargs)):
 			if indvKwargs[i] != None:
@@ -1604,7 +1442,7 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 		#continue on to the non-recursive stuff.
 	
 	if n == 1: #If in first recursion:
-		# print ("\t\t\tExpanding miscList...")
+		print ("\t\tfreewrite_declarative() is expanding the miscList...") #for debugging
 		#if a subject or conceptType was provided, add all matching verbs.
 		if subject != None or conceptType != None:
 			addMe = findVerbs(conceptType,subject)
@@ -1615,23 +1453,21 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 					for i in range (0,len(addMeWithPOS)):
 						miscList.append(addMeWithPOS[i])
 
-		#if a verb was provided, add all matching subects and objects.
-		if verb != None:
-			#add subjects #incomplete (requires a searchTree.)
-			addMe = []
-			addMeWithPOS = []
-			# also, use the same formatting as above, to add pos, and to fail gracefully.
-			
-			#add objects 
-			addMe = []
-			addMeWithPOS = []
-			#incomplete (findObject() hasn't been written yet.)
-			# also, use the same formatting as above, to add pos, and to fail gracefully.
+		#add all the categories of each term
+		if isinstance(miscList,list) and len(miscList)>0: #fail gracefully
+			for i in range(0,len(miscList)):
+				addMe = findCategories(miscList[i][0])
+				addMeWithPOS = []
+				if isinstance(addMe,list) and len(addMe) > 0: #fail gracefully
+					addMeWithPOS = determinePOS(addMe) #Add a POS for each word
+					if len(addMeWithPOS) > 0: #fail gracefully
+						for h in range (0,len(addMeWithPOS)):
+							miscList.append(addMeWithPOS[h])
 
 		#continue on to the non-recursive stuff.
 
 	if n == 2: #If in second recursion:
-		# print ("\t\t\tExpanding miscList even more...")
+		# print ("\t\tfreewrite_declarative() is expanding miscList even more...") #for debugging
 		#for every noun in miscList, add every verb/conceptType. no searchTree.
 		verbsToAdd = []
 		for i in range (0,len(miscList)):
@@ -1641,7 +1477,7 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 				if isinstance(addMe,list) and len(addMe) > 0: #fail gracefully
 					for j in range (0,len(addMe)):
 						verbsToAdd.append(addMe[j])
-		print("\t\t\tverbsToAdd=",str(verbsToAdd))
+		# print("\t\t\tverbsToAdd=",str(verbsToAdd))
 		
 		if len(verbsToAdd) > 0: #fail gracefully
 			for i in range (0,len(verbsToAdd)):
@@ -1654,13 +1490,13 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 
 		
 		#for every verb, in miscList, run findObject().
-		# incomplete (findObject() hasn't been written yet.)
+		# incomplete (findObject() doesn't test for most common objects...)
 
 		#continue on to the non-recursive stuff.
 
 	if n == 3: #If in third recursion:
-		# print ("\t\t\tExpanding miscList to the max!")
-		pass #for every noun in miscList, add every verb/conceptType, using a searchTree to save every 'defining' and 'other' category. #incomplete 
+		# print ("\t\tfreewrite_declarative() is expanding miscList to the max!") #for debugging
+		pass #For each term in miscList, use word vectors/free association to add related terms #incomplete
 		
 		#continue on to the non-recursive stuff.
 
@@ -1669,8 +1505,9 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 
 	############## NON-RECURSIVE STUFF - constructing sentences ##############	
 	####### Construct word arrangements
-	#If a miscList contains any content...
+	#If miscList contains any content...
 	if isinstance(miscList,list) and len(miscList) > 0: #fail gracefully
+		# print("miscList =",str(miscList)) #for debugging
 		if n == 0:
 			miscList = determinePOS(miscList) #Add a POS for each word in miscList
 		
@@ -1737,15 +1574,21 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 	else:
 		pass #print ("\t\t\tfreewrite_declarative() tried to filter possSc, but it already empty...")
 
+	####### Filter by truth + relevance
+	#test each possSc for truth
+	# scToEval = [] #sentences to evaluate #later
 
-	#if n = 0:
-		#test each possSc for truth
-		# later
-		#Determine which sentences are most relevant (e.g. info the user doens't already know, info relevant to current conversation)
-		# later
-		# scToEval = [] #sentences to evaluate
+	#Determine which sentences are most relevant
+	# -relevance to current conversation
+	# -how many recursions were needed (0-1 by .20s)
+	# -whate are the chances thatthe user already knows the info (0-1)
+	# research more tests/weights
+	# use ML to weight the coefficients of each test, then hard code those coefficients (for now)
+
 	
 	
+
+
 	# print("miscList=",str(miscList)) #for debugging
 	# print("possSc=",str(possSc)) #for debugging
 	
@@ -1782,8 +1625,8 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 # print("\n---availableSc:")
 # eow(availableSc,True) #prints results from eow()
 
-veryFinalResult = isCategoryInstance("number","abstraction")
-print("\nveryFinalResult =",str(veryFinalResult))
+finalResult = freewrite_declarative(miscList=["penguin"])
+eow(finalResult,True)
 
 
 
