@@ -1496,7 +1496,7 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 
 	if n == 3: #If in third recursion:
 		# print ("\t\tfreewrite_declarative() is expanding miscList to the max!") #for debugging
-		pass #For each term in miscList, use word vectors/free association to add related terms #incomplete
+		pass #For each term in miscList, use word vectors/free association to add related terms (both nouns and verbs) #incomplete
 		
 		#continue on to the non-recursive stuff.
 
@@ -1579,9 +1579,10 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 	# scToEval = [] #sentences to evaluate #later
 
 	#Determine which sentences are most relevant
-	# -relevance to current conversation
-	# -how many recursions were needed (0-1 by .20s)
-	# -whate are the chances thatthe user already knows the info (0-1)
+	# -relevance to current conversation (maybe word vector duistances)
+	# -how many recursions were needed (0-1 by 0.2s)
+	# -what are the chances that the user already knows the info (0-1)
+	# -provide info about tone
 	# research more tests/weights
 	# use ML to weight the coefficients of each test, then hard code those coefficients (for now)
 
@@ -1626,8 +1627,8 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 # eow(availableSc,True) #prints results from eow()
 
 finalResult = freewrite_declarative(miscList=["penguin"])
-eow(finalResult,True)
-
+finalResult = eow(finalResult)
+print(finalResult)
 
 
 print("\n===== Script Ended =====")
