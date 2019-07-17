@@ -1579,7 +1579,7 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 	# scToEval = [] #sentences to evaluate #later
 
 	#Determine which sentences are most relevant
-	# -relevance to current conversation (maybe word vector duistances)
+	# -relevance to current conversation (maybe word vector distances)
 	# -how many recursions were needed (0-1 by 0.2s)
 	# -what are the chances that the user already knows the info (0-1)
 	# -provide info about tone
