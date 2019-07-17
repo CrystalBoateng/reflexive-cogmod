@@ -1,0 +1,38 @@
+Info about learned_data.db
+
+
+# RULES: 
+# category lists are sparse (meaning that they're not comprehensive), and are subjective.
+# all the rest of these rules are just suggestions; none of this needs to be perfect in order to function.
+# all nouns should be singular and nominative case (e.g. "I", not "me"). all verbs should be infinitive present-tense, without the word 'to' (e.g. "fly", not "to fly").
+# 'negated' categories (e.g. 'not animal') are only allowed if they're exceptions to a rule. For example, "not fly" is allowed for "penguin" because bird has the property "fly"). They can also be allowed if they're stand-alone terms on their own (e.g. 'non-smoking' or 'inanimate'). Evlauating this is subjective.
+# nested categories are NOT required. also, no category is required to link to a root category; free-floating branches are fine.
+# terms can be longish sentence fragments, but ideally they will be words or short phrases. this maximizes pattern-recognition during reflection.
+
+# STORED DATA:
+#Each term can have the following data (see the database schema for more info)
+	# a unique key
+	# the term
+	# "Part Of Speech" - For a complete list, see http://universaldependencies.org/u/pos/
+	# comprehensive definition (for now I am hard-coding these)
+	# deduced definition
+	# defining categories - the categories which define the object ontologically, and into which ALL instances can be classified. example: every time someone 'defines' something, they are 'describing' it.
+	# other categories - categories into which ALL instances can be classified. for example: ALL instances of 'defining' are also 'stating'.
+	# {various forms of the term, e.g. conjugation for verbs or plaurality for nouns or whatever}
+			# 'Plaural': 	*defaults to the singular form plus 's'
+			# 'PastTense':
+			# 'PresentTense':
+			# 'Gerund':
+			# 'Actor':		*defaults to the gerund form minus "ing" plus "er".
+			# 'Singular3rdPersonPerfectTense':
+			# 'PerfectTense':
+			# 'Pluperfect':
+			# (and for the verb "be": 'PluralPastTense', 'PluralPresentTense', 'PluralInfinitive').
+			# traditional response if one exists. these are common for some idioms.
+		# 'Infinitive' is omitted because it's already included as the term.
+		# 'FutureTense' is omitted because it's simply "will " + the infinitive.
+	# miscellaneous data is stored in the table terms_misc
+	# abstract ideas may have additional properties stored in the table terms_conceptType
+
+#Conjugation key names and the conjugations for the following verbs are from 'compromise', an open-source NLP project published under a copyleft MIT license. A copy of the license is provided here, under /nlp_resources/compromise's MIT License.txt. Source code and licenseare available at: github.com/nlp-compromise/compromise or at http://compromise.cool 
+	#'take','can','free','puke','arise','babysit','be','is','beat','begin','ban','bet','bite','bleed','breed','bring','broadcast','build','buy','choose','cost','deal','die','dig','draw','drink','drive','eat','fall','feed','feel','fight','find','fly','blow','forbid','edit','forget','forgive','freeze','get','give','go','hang','have','hear','hide','hold','hurt','lay','lead','leave','lie','light','lose','make','mean','meet','pay','read','ring','rise','run','say','see','sell','shine','shoot','show','sing','sink','sit','slide','speak','spin','stand','steal','stick','sting','stream','strike','swear','swim','swing','teach','tear','tell','think','understand','wake','wear','win','withdraw','write','tie','ski','boil','miss','act','compete','being','imply','ice','develop','wait','aim','spill','drop','log','rub','smash','egg','suit','age','shed','break','catch','do','bind','spread','become','bend','brake','burn','burst','cling','come','creep','cut','dive','dream','flee','fling','got','grow','hit','keep','kneel','know','leap','lend','loose','prove','put','quit','ride','seek','send','set','sew','shake','shave','shut','seat','slay','sleep','sneak','speed','spend','spit','split','spring','stink','strew','sware','sweep','thrive','undergo','upset','weave','weep','wind','wring'.

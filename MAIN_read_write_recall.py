@@ -1627,9 +1627,45 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 # print("\n---availableSc:")
 # eow(availableSc,True) #prints results from eow()
 
-finalResult = freewrite_declarative(miscList=["penguin"])
-finalResult = eow(finalResult)
-print(finalResult)
+# finalResult = freewrite_declarative(miscList=["penguin"])
+# finalResult = eow(finalResult)
+# print(finalResult)
+
+cogmod_simple = True
+while cogmod_simple == True:
+	inputParsed = False
+	print("""
+\nAVAILABLE COMMANDS: 
+	'abort' (exit without reflecting)
+	'read' (e.g. read https://en.wikipedia.org/wiki/Carpinus_betulus)
+	'read this from source: paragraph' (e.g. read this from wikipedia: A folksinger or folk singer is a person who sings folk music.)
+	'exit'
+	""")
+	cogmod_simple_input = input('--> ')
+	#exit without closeOut
+	if cogmod_simple_input == 'abort':
+		inputParsed = True
+		cogmod_simple = False
+
+	#if cogmod_simple_input starts with read
+	if cogmod_simple_input[:5] == 'read ':
+		readingSuccess = False
+		inputParsed = True
+		read(cogmod_simple_input)
+
+	if cogmod_simple_input[:6] == 'match ':
+		inputParsed = True
+		print(cogmod_simple_input[6:])
+		matchTopic(cogmod_simple_input[6:])
+
+	#exit the main loop
+	if cogmod_simple_input == 'exit':
+		inputParsed = True
+		reflectOnKnownData()
+		cogmod_simple = False
+	#handle syntax errors
+	if inputParsed == False:
+		print ("I don't understand '%s'." % cogmod_simple_input)
 
 
 print("\n===== Script Ended =====")
