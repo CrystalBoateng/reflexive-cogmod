@@ -1,42 +1,42 @@
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Load dependencies and global variables
 #{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
-#import dependencies
-from datetime import datetime #to generate UUIDs
-from learned_data.util_findCategories import * #to link terms
-from learned_data.util_isCategoryInstance import * #to evaluate terms' category relationships
-from operator import itemgetter #to sort lists of lists
-import itertools # to removeDuplicates()
-import json #to read doc metadata
-import os #to read and write from disk, and backup database
-import re #to parse html
-import shutil #for creating database backups
-import sqlite3 #for reading/writing to database
-import sys #to delete and reload python files
-import textacy #to create docs/doc metadata, and to lemmatize and tokenize unstructured text
-import uuid #to generate UUIDs
+# import dependencies
+from datetime import datetime # to generate UUIDs
+from learned_data.util_findCategories import * # to link terms
+from learned_data.util_isCategoryInstance import * # to evaluate terms' category relationships
+from operator import itemgetter # to sort lists of lists
+import itertools #  to removeDuplicates()
+import json # to read doc metadata
+import os # to read and write from disk, and backup database
+import re # to parse html
+import shutil # for creating database backups
+import sqlite3 # for reading/writing to database
+import sys # to delete and reload python files
+import textacy # to create docs/doc metadata, and to lemmatize and tokenize unstructured text
+import uuid # to generate UUIDs
 
-#declare global variables
-absolute_filepath = os.path.dirname(__file__) #the absolute filepath of this script.
+# declare global variables
+absolute_filepath = os.path.dirname(__file__) # the absolute filepath of this script.
 knowledgePriorityLevel = 1
-sentencesJustWritten = 0 #number of sentences written since last user input
-maxSentencesAtOnce = 10 #limit how many sentences can be written without user input
+sentencesJustWritten = 0 # number of sentences written since last user input
+maxSentencesAtOnce = 10 # limit how many sentences can be written without user input
 dbConn = sqlite3.connect(absolute_filepath+'/learned_data/learned_data.db') #to connect to database
-dbCursor = dbConn.cursor() #to connect to database
+dbCursor = dbConn.cursor() # to connect to database
 # dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
 # from nlp_resources.compromise_conjugations_mod import * #import variable compromiseConjugations, to help parse conjugated verbs #it'll be a long time before this can learn verbs on its own.
 
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		General utilities
 #{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
-#Utilities with no external dependencies:
+# Utilities with no dependencies on external files:
 def eow(input,p=False):
 	"""Takes a list of lists of lists of words. Returns it, but with Every Other Word omitted. Useful for removing parts of speech from sentences to print.
 		Or, if p == True, 
@@ -210,11 +210,11 @@ def sortLists(myLists,index,order):
 		sortedLists = list(reversed(sortedLists))
 	return sortedLists
 
-#Utilities with external dependencies:
+# Utilities with dependencies on external files:
 def infinitize(word,pos=None):
 	pass 
 	# try using textacy, then (via regular expressions) the db and compromise.
-def execDefComp(requestedTerm,wordContext,subject=None,verb=None,do=None,io=None,adjAdv=None):
+def execDefComp(requestedTerm,wordContext,subject=None,vIerb=None,do=None,io=None,adjAdv=None):
 	"""	Executes a currentDef() located in the column 'def_comprehensive' in the table 'terms'.
 	Note: This function's query can only return ONE row at a time, from the table 'terms'. Avoid passing in any terms which could return >1 row.
 
@@ -439,7 +439,7 @@ def refreshKnownCorpus():
 	exec("stringOfKnownCorpus = '' \nwith open ('known_corpus_tokenized.py', 'rt', encoding='utf8') as f:\n\tfor line in f:\n\t\tstringOfKnownCorpus+=line\nexec(stringOfKnownCorpus)")
 
 
-#Utilities with both internal and external dependencies:
+#Utilities with both internal and external file dependencies:
 def backupDB(): #internal dependency: generateUuid()
 	"""Save a backup of learned_data.db, in the folder backup_databases, under a unique name.
 	----------Dependencies:
@@ -549,11 +549,11 @@ def determinePOS(termOrList,db=None): #internal dependency: pullQueryResults()
 
 
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Reading
 #{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 def loadHtml(myURL,sourceToLoad="Unknown"):
 	"""Download HTML from a webpage and push the useful parts of the text to temp_processing_text.txt.
 	This function is called by read(). It should not be called directly.
@@ -863,11 +863,11 @@ def read(readRequest):
 
 
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Remembering, Recalling, Reflecting
 #{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 # 
 refreshKnownCorpus()
 
@@ -982,14 +982,14 @@ def reflectOnKnownData(): #incomplete
 
 
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Writing
 #{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Known Meanings
-#The core knownMeanings of some (but not all) knownTerms. The terms themselves are stored in known_terms.py. Meanings are recognized patterns, and therefore, some may exist which do not exist as terms in English. They may be represented as pandas DataFrames or something else.
+# The core knownMeanings of some (but not all) knownTerms. The terms themselves are stored in known_terms.py. Meanings are recognized patterns, and therefore, some may exist which do not exist as terms in English. They may be represented as pandas DataFrames or something else.
 #   General Utilities for knownMeanings *I may move these up to te Remembering section at some point.
 #   Definitions of knownMeanings (storage)			 NOTES:
 	# -None of these meanings should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py. Instead these terms should be concepts which cannot be described using a platonic ideal.
@@ -1366,7 +1366,8 @@ def evalScTruth(statement):
 	"""Evaluate whether a statement is true. Attempt to apply evaluation criteria in the following order:
 		1. def_comprehensive
 		2. def_deduced
-		3. I dont remember.
+		3. definingCateg
+		4. otherCateg
 	----------Dependencies:
 	learned_data.db and maybe others idk.
 	----------Parameters:
@@ -1615,11 +1616,11 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 
 
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Main Loop
 #{}
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
+#{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #This section exists simply for testing. The finalized file will call functions in a different way.
 
 # availableSc = freewrite_declarative(miscList=["number"])
