@@ -24,6 +24,7 @@ absolute_filepath = os.path.dirname(__file__) # the absolute filepath of this sc
 knowledgePriorityLevel = 1
 sentencesJustWritten = 0 # number of sentences written since last user input
 maxSentencesAtOnce = 10 # limit how many sentences can be written without user input
+debugging = True
 dbConn = sqlite3.connect(absolute_filepath+'/learned_data/learned_data.db') #to connect to database
 dbCursor = dbConn.cursor() # to connect to database
 # dbCursor.execute("PRAGMA foreign_keys=ON") # to allow SQLite foreign key deletion/update on cascade
@@ -988,239 +989,11 @@ def reflectOnKnownData(): #incomplete
 #{}
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 
-#{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Known Meanings
-# The core knownMeanings of some (but not all) knownTerms. The terms themselves are stored in known_terms.py. Meanings are recognized patterns, and therefore, some may exist which do not exist as terms in English. They may be represented as pandas DataFrames or something else.
-#   General Utilities for knownMeanings *I may move these up to te Remembering section at some point.
-#   Definitions of knownMeanings (storage)			 NOTES:
-	# -None of these meanings should be nouns; nouns are defined by only their "defining categories," which are stored in known_terms.py. Instead these terms should be concepts which cannot be described using a platonic ideal.
-	# -All of these functions are overloaded: 
-		# whenever wordContext == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
-		# whenever wordContext == "learn", the function will attempt to integrate the input information, into known_terms.py; 
-		# whenever wordContext == "perform", the function will attempt to perform the verb/become the adjective/perform the adverb/etc; 
-def meaning_include(wordContext,myCategory,myWord,indirectObject):
-	"""Defines the core meaning of the term "include". 
-	----------Dependencies:
-	isDefiningCategory()
-
-	----------Parameters:
-	wordContext = a string: "evaluate" or "learn" or "perform"
-	myCategory = a string
-	myWord = a string
-	indirectObject = a string
-
-	----------Returns:
-	a boolean (True if term evaluates to True, or if the info is learned/performed successfuly in the wordContext. Else, False.)
-	"""
-	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet. also this is only needed in the imperative context; otherwise its just the subject. #incomplete
-
-	#Handle errors non-fatally
-	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
-		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
-		return None
-	for i in range (0, len(meaning_include)):
-		if isinstance (meaning_include[i], str):
-			pass
-		else:
-			print( "Error - a value which was not a string, was passed to one of the knownMeanings. The function reutrned None, rather than a Boolean.")
-			return None
-
-
-	# if wordContext is 'evaluate':
-	if wordContext == "evaluate":
-		if isDefiningCategory(myWord,myCategory) == True: # incomplete. write a utility search tree
-			print("Evaluating...  The category %s includes %s." % (myCategory,myWord)) 
-			return True
-		else:
-			print("Evaluating...  The category %s does not include %s." % (myCategory,myWord)) 
-			return False
-
-	# if wordContext is 'learn':
-	# if wordContext == "perform":
-	#	check if the myCategory already exists as an entry in knownTerms. if so, pass. else, create it. 
-	#	append myWord to its index 3.
-	#	When done reading the whole user input... (i.e., not in this function)
-	#		pushToDisk(knownTerms)
-	#		refreshKnownTerms()
-
-	# if wordContext is 'perform':
-	if wordContext == "perform":
-		if indirectObject == None:
-			print ("I was instructed to 'include' something within myself. However, I cannot modify my own code.") #incomplete
-			return False
-		else:
-			print ("I was instructed to 'include' something within something else. However, I don't know how to do that.") #incomplete
-			return False
-def meaning_define(wordContext,subject,directObject):
-	"""Defines the core meaning of the term "define". 
-	----------Dependencies:
-	findIndexOfString()
-
-	----------Parameters:
-	wordContext = a string: "evaluate" or "learn" or "perform"
-	subject = a string
-	directObject = a string
-	indirectObject = a string
-
-	----------Returns:
-	if perform: a string (e.g. "Penguin is characterized by aquatic and not flying.")
-	else: a boolean (True if term evaluates to True, or if the info is learned successfuly in the wordContext. Else, False.)
-	"""
-	indirectObject = "havent written this yet" #I haven't yet gotten around to indirect objects in any of these definitions yet #incomplete
-
-	#Handle errors non-fatally
-	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
-		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
-		return None
-	for i in range (0, len(meaning_define)):
-		if isinstance (meaning_define[i], str):
-			pass
-		else:
-			print( "Error - a value which was not a string, was passed to one of the knownMeanings. The function reutrned None, rather than a Boolean.")
-			return None
-
-
-	# if wordContext is 'perform':
-	myDefCats = "" #i.e. 'my defining categories'
-	miscProperties = [] #any category without a POS tag
-	negation = '' #by default, there is no negation.
-	subjectIndex = findIndexOfString(subject,knownTerms,0)
-
-	#oops i forgot to return False or "i dont understand", whenever it's a bad request. #incomplete
-	
-	for i in range (0,len(knownTerms[subjectIndex][2])):
-		myCategory = knownTerms[subjectIndex][2][i]
-		if myCategory[:4] == 'not ':
-			negation = 'not '
-			myCategory = myCategory[4:]
-			print("myCategory =",myCategory)
-		if type(findIndexOfString(myCategory,knownTerms,0)) == int: #if the category is a term of its own...
-			categoryIndex = findIndexOfString(myCategory,knownTerms,0)
-			if knownTerms[categoryIndex][1] == 'NOUN':
-				myDefCats += "being %sa %s " % (negation,knownTerms[categoryIndex][0])
-			if knownTerms[categoryIndex][1] == 'VERB':
-				myDefCats += "%sbeing able to %s " % (negation,knownTerms[categoryIndex][0])
-			if knownTerms[categoryIndex][1] == 'ADJ':
-				myDefCats += "%sbeing %s " % (negation,knownTerms[categoryIndex][0])
-		else:
-			myDefCats += "like %s " % myCategory
-
-		#make the list more grammatical
-		if i < len(knownTerms[subjectIndex][2])-1:
-			myDefCats += "and "
-
-	return("%s is characterized by %s." % (subject, myDefCats)) # this marks the exact moment when I realized I should've used a SQL database.
-
-	# if wordContext is 'learn'
-	#	check if the directObject already exists as an entry in knownTerms. if so, pass. else, create it. 
-	#	append subject to its index 2.
-	#	When done reading the whole user input... (i.e., not in this function)
-	#		pushToDisk(knownTerms)
-	#		refreshKnownTerms()
-
-	# if wordContext is 'evaluate':
-	if isDefiningCategory(directObject,subject) == True:
-		return True
-	else: # Note: even if the answer is unknown, this returns false.
-		return False 
-def meaning_number(wordContext,subject):
-	"""Defines the core meaning of the term "number". 
-	----------Dependencies:
-	None
-
-	----------Parameters:
-	wordContext = a string: "evaluate" or "learn" or "perform"
-	subject = a string
-	----------Returns:
-	a boolean (True if term evaluates to True, or if the info is learned successfuly in the wordContext. Else, False.)
-	"""
-	#Handle errors non-fatally
-	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
-		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
-		return None
-
-
-	# if wordContext is 'evaluate':
-	if wordContext == 'evaluate':
-		subject = float(subject)
-		if isinstance(subject, float) == True:
-			print("Evaluating...  %s is a number." % (str(subject))) 
-			return True
-		else:
-			print("Evaluating...  %s is not a number." % (str(subject))) 
-			return False
-
-	# if wordContext is 'learn':
-	if wordContext == 'learn':
-		print("Learning new types of numbers is both difficult and currently unnecessary. The function returned False.") # incomplete
-		return False
-
-	# if wordContext is 'perform':
-	if wordContext == "perform":
-		print ("I was instructed to 'perform' a number. However, this makes no conceptual sense. The function returned False.")
-		return False
-def meaning_longer(wordContext,subject,comparedObject):
-	"""Defines the core meaning of the term "longer". 
-	----------Dependencies:
-	None
-
-	----------Parameters:
-	wordContext = a string: "evaluate" or "learn" or "perform"
-	subject = preferably a string
-	comparedObject = preferably a string
-
-	----------Returns:
-	a boolean (True if term evaluates to True, or if the info is learned successfuly in the wordContext. Else, False.)
-	"""
-	#Handle errors non-fatally
-	if wordContext != "evaluate" and wordContext != "learn" and wordContext != "perform": # validate wordContext
-		print( "Error - an invalid 'wordContext' of '%s' was passed to one of the knownMeanings. wordContext must be 'evaluate' or 'learn' or 'perform'.  The function reutrned None, rather than a Boolean." % wordContext)
-		return None
-
-
-	# if wordContext is 'evaluate':
-	if wordContext == 'evaluate':
-		subject = str(subject)
-		comparedObject = str(comparedObject)
-		if len(subject) > len(comparedObject):
-			print("Evaluating...  %s is longer than %s." % (str(subject), str(comparedObject) )) 
-			return True
-		else:
-			print("Evaluating...  %s is not longer than %s." % (str(subject), str(comparedObject) )) 
-			return False
-
-	# if wordContext is 'learn':
-	if wordContext == 'learn':
-		print ("I haven't written this part of the function yet") #incomplete
-		return False
-
-	# if wordContext is 'perform':
-	if wordContext == "perform":
-		print ("I was instructed to perform 'longer', which does not make sense without more context. The function returned False.")
-		return False
-
-#   Handler for knownMeanings 
-	# This determines which definitions to call. If all of the called functions return True, then the term is applicable. Unfortunately this list can't be stored in a separate file, or else it can't access knownTerms.
-knownMeanings = [ 
-	# [ each line contains...
-		# "the term", 
-		# "the POS", 
-		# [a test that evaluates to a boolean when wordContext=="evaluate". if all the booleans are True, then the meaning is applicable within a given wordContext],
-		# use the customSearchTree in the meaning definition. If False, default to search tree scSearchTree
-		# {'the types of information which the concept expresses': any object,},
-	# ],
-	["include", "VERB", [meaning_include], True, {'detail':True},],
-	["define", "VERB", [meaning_define], True, {'general':True},],
-	["number", "NOUN", [meaning_number], False, {'math':True,'detail':True},],
-	["longer", "ADJ", [meaning_longer], False, {'compare':True,'physical':True,'size':True,'space':True,},],
-	#other non-physical terms to learn:  say, find, difficult, know, know of, write, read, get, make
-]
-
-
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Selecting Responses
 def scSearchTree(inputTerm):
-	pass #incomplete
-	# find a fast way to pull al terms which metnion the inputTerm anywhere in the knownTerm.
-	#Return a list of the knownTerms indeces which contain matching terms
+	pass # TODO:
+	# efficiently pull all terms which mention the inputTerm anywhere in the knownTerm.
+	# return a list of the knownTerms indeces which contain matching terms
 
 
 
@@ -1358,8 +1131,7 @@ def findVerbs(conceptType=None,subject=None):
 	if possVerbs == []:
 		possVerbs = None
 	return possVerbs
-
-# also priority communications, e.g. traditional Responses, executing/answering Imperatives, answering Questions, etc.
+# TODO: priority communications, e.g. traditional Responses, executing/answering Imperatives, answering Questions, etc.
 	
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}@@@  Complex writing functions
 def evalScTruth(statement):
@@ -1613,9 +1385,6 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 
 
 
-
-
-
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #{}
 #{}	@@		Main Loop
@@ -1623,49 +1392,47 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 #{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}
 #This section exists simply for testing. The finalized file will call functions in a different way.
 
-# availableSc = freewrite_declarative(miscList=["number"])
-# print("\n---availableSc:")
-# eow(availableSc,True) #prints results from eow()
 
-# finalResult = freewrite_declarative(miscList=["penguin"])
-# finalResult = eow(finalResult)
-# print(finalResult)
 
-cogmod_simple = True
-while cogmod_simple == True:
-	inputParsed = False
-	print("""
-\nAVAILABLE COMMANDS: 
-	'abort' (exit without reflecting)
-	'read' (e.g. read https://en.wikipedia.org/wiki/Carpinus_betulus)
-	'read this from source: paragraph' (e.g. read this from wikipedia: A folksinger or folk singer is a person who sings folk music.)
-	'exit'
-	""")
-	cogmod_simple_input = input('--> ')
-	#exit without closeOut
-	if cogmod_simple_input == 'abort':
-		inputParsed = True
-		cogmod_simple = False
-
-	#if cogmod_simple_input starts with read
-	if cogmod_simple_input[:5] == 'read ':
-		readingSuccess = False
-		inputParsed = True
-		read(cogmod_simple_input)
-
-	if cogmod_simple_input[:6] == 'match ':
-		inputParsed = True
-		print(cogmod_simple_input[6:])
-		matchTopic(cogmod_simple_input[6:])
-
-	#exit the main loop
-	if cogmod_simple_input == 'exit':
-		inputParsed = True
-		reflectOnKnownData()
-		cogmod_simple = False
-	#handle syntax errors
-	if inputParsed == False:
-		print ("I don't understand '%s'." % cogmod_simple_input)
-
+if debugging:
+	# availableSc = freewrite_declarative(miscList=["number"])
+	# print("\n---availableSc:")
+	# eow(availableSc,True) #prints results from eow()
+	finalResult = freewrite_declarative(miscList=["penguin"])
+	finalResult = eow(finalResult)
+	print(finalResult)
+else:
+	cogmod_simple = True
+	while cogmod_simple == True:
+		inputParsed = False
+		print("""
+	\nAVAILABLE COMMANDS: 
+		'abort' (exit without reflecting)
+		'read' (e.g. read https://en.wikipedia.org/wiki/Carpinus_betulus)
+		'read this from source: paragraph' (e.g. read this from wikipedia: A folksinger or folk singer is a person who sings folk music.)
+		'exit'
+		""")
+		cogmod_simple_input = input('--> ')
+		#exit without closeOut
+		if cogmod_simple_input == 'abort':
+			inputParsed = True
+			cogmod_simple = False
+		#if cogmod_simple_input starts with read
+		if cogmod_simple_input[:5] == 'read ':
+			readingSuccess = False
+			inputParsed = True
+			read(cogmod_simple_input)
+		if cogmod_simple_input[:6] == 'match ':
+			inputParsed = True
+			print(cogmod_simple_input[6:])
+			matchTopic(cogmod_simple_input[6:])
+		#exit the main loop
+		if cogmod_simple_input == 'exit':
+			inputParsed = True
+			reflectOnKnownData()
+			cogmod_simple = False
+		#handle syntax errors
+		if inputParsed == False:
+			print ("I don't understand '%s'." % cogmod_simple_input)
 
 print("\n===== Script Ended =====")

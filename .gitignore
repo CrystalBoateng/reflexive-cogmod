@@ -1,7 +1,8 @@
-.gitignore
 ######################### Personal
 __reference_and_obselete/
+.gitignore
 kr1.py
+documentation/roadmap.txt
 RUN_TEST.py
 RUN_MOST_RECENT.py
 tr1.py

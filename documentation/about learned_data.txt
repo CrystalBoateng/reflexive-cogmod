@@ -14,7 +14,11 @@ Info about learned_data.db
 	# a unique key
 	# the term
 	# "Part Of Speech" - For a complete list, see http://universaldependencies.org/u/pos/
-	# comprehensive definition (for now I am hard-coding these)
+	# comprehensive definition (for now I am hard-coding these). nouns are defined by only their "defining categories." comprehensive defitions should only be written for concepts which cannot be described using a platonic ideal.
+		--> whenever wordContext == "evaluate", the function will evaluate the accuracy of the term with respect to the arguments passed into the function
+		--> whenever wordContext == "learn", the function will attempt to integrate the input information, into the learned data; 
+		--> whenever wordContext == "perform", the program will attempt to perform the verb/become the adjective/perform the adverb/etc; 
+
 	# deduced definition
 	# defining categories - the categories which define the object ontologically, and into which ALL instances can be classified. example: every time someone 'defines' something, they are 'describing' it.
 	# other categories - categories into which ALL instances can be classified. for example: ALL instances of 'defining' are also 'stating'.
