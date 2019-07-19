@@ -1,0 +1,10 @@
+Info about MAIN_read_write_recall.py
+
+
+about tokenize()
+	When this program reads a text passage, it saves the most common term as the title of the reading. This is better than saving the page's <h1> tag because it is tokenized in the same way that the terms in other network nodes, are tokenized. Another viable way to choose a title for the reading would be to search through all primaryTerms and choose the first (or longest) one that matches the first line of temp_processing_text.txt.
+	
+about freewrite_declarative()
+	This function does not answer questions. That will be done in some other, unrelated function. In the context of answering questions, its probably best to evaluate sentence relevance and structure before searching for content.
+
+	In the non-recursive section, if posTemplates, consider pulling templates by their associated tags instead.

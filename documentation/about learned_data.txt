@@ -33,6 +33,7 @@ Info about learned_data.db
 			# 'Pluperfect':
 			# (and for the verb "be": 'PluralPastTense', 'PluralPresentTense', 'PluralInfinitive').
 			# traditional response if one exists. these are common for some idioms.
+			* Note: The dictionary of known terms doesn't need to be comprehensive, because I intend to write a conjugation function which cascades to the next-most-appropriate conjugation, whenever the requested conjugation is unavailable.
 		# 'Infinitive' is omitted because it's already included as the term.
 		# 'FutureTense' is omitted because it's simply "will " + the infinitive.
 	# miscellaneous data is stored in the table terms_misc
