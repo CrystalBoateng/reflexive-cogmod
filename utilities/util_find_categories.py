@@ -1,31 +1,11 @@
 #import dependencies
 import os.path, sqlite3
-absolute_filepath = os.path.dirname(__file__)
-dbConn = sqlite3.connect(absolute_filepath+'/learned_data.db')
+dbConn = sqlite3.connect(os.path.dirname(__file__)
+	+ '/learned_data.db')
 dbCursor = dbConn.cursor()
-def pull_query_results():
-	"""Copies the most recent SQLite selection. Should ONLY be called after executing a SQLite query.
-	----------Dependencies:
-	import sqlite3
-	learned_data.db in the folder learned_data
-	the global variables 'dbConn' and 'dbCursor'
+from utilities.util_pull_query_results import *
 
-	----------Parameters:
-	None
-	----------Returns:
-	a list, or None.
-	"""
-	#pull in whatever the most recent query selected
-	dbData = dbCursor.fetchall() 
-	#put the results into a list
-	listToReturn = []
-	for row in dbData:
-		listToReturn.append(row[0])
-	return listToReturn
-	if listToReturn == []: # if no results, return None.
-		return None
-
-#the actual function to call
+# main functionality
 def find_categories (inputTerm,defTraitsOnly=False):
 	"""Returns a list containing all of the known categories, into which the input term fits.
 	----------Dependencies:

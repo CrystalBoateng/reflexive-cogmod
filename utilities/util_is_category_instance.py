@@ -1,30 +1,4 @@
-#import dependencies
-import os.path, sqlite3
-absolute_filepath = os.path.dirname(__file__)
-dbConn = sqlite3.connect(absolute_filepath+'/learned_data.db')
-dbCursor = dbConn.cursor()
-def pull_query_results():
-	"""Copies the most recent SQLite selection. Should ONLY be called after executing a SQLite query.
-	----------Dependencies:
-	import sqlite3
-	learned_data.db in the folder learned_data
-	the global variables 'dbConn' and 'dbCursor'
-
-	----------Parameters:
-	None
-	----------Returns:
-	a list, or None.
-	"""
-	#pull in whatever the most recent query selected
-	dbData = dbCursor.fetchall() 
-	#put the results into a list
-	listToReturn = []
-	for row in dbData:
-		listToReturn.append(row[0])
-	return listToReturn
-
-	if listToReturn == []: # if no results, return None.
-		return None
+from utilities.util_pull_query_results import *
 
 #extended recursions
 def instance_search_tree(instance,finalCategory,instanceSearchesPerformed,defTraitsOnly=False):
@@ -108,7 +82,7 @@ def instance_search_tree(instance,finalCategory,instanceSearchesPerformed,defTra
 			# if no match was found at any point in this iteration of this function, return false
 			return False 
 
-# the main function to call
+# the function for which this file gets called
 def is_category_instance (instance,finalCategory,defTraitsOnly=False):
 	"""Returns True if the 'instance' fits in the category 'finalCategory'. Else, returns false.
 	----------Dependencies:
