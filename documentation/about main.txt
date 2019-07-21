@@ -1,10 +1,13 @@
 Info about MAIN_read_write_recall.py
 
 
-about findPosTemplates()
+about find_possible_templates()
 	One day this will pull varied lists from a fancy table, but for now there are only two sentence templates.
 	Dependencies: None, for now. learned_data.db, eventually.	
 	Parameters: None, for now.
+
+about execute_def_comp()
+	In the future it will probably be preferable to use kwargs for these arguments.
 
 about tokenize()
 	When this program reads a text passage, it saves the most common term as the title of the reading. This is better than saving the page's <h1> tag because it is tokenized in the same way that the terms in other network nodes, are tokenized. Another viable way to choose a title for the reading would be to search through all primaryTerms and choose the first (or longest) one that matches the first line of temp_processing_text.txt.
