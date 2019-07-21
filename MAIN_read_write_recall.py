@@ -867,23 +867,6 @@ def deleteSimpleDuplicates():
 	pass # TODO: write this function.
 	# An overloaded function. takes the optional argument 'knownCorpus'. Otherwise, operates on 'knownTerms'.
 	# Deletes duplicate entries and categories from database (and/or known_corpus).
-def updateDefComp():
-	print("\t\tupdating each def_comprehensive in the table 'terms'.")
-	wordsWithDefComp = [
-		["517223ec_2018-04-08_17-27", "def_comp_include.py"],
-		["f71e490c_2018-04-08_17-27", "def_comp_define.py"],
-	]
-	for i in range(len(wordsWithDefComp)): #for each word with a comprehensive definition
-		currentKey = wordsWithDefComp[i][0]
-		currentFileName = absolute_filepath+"/learned_data/"+wordsWithDefComp[i][1]
-		currentDefAsString = ""
-		#pull contents of .py file into a string
-		with open (currentFileName, 'r', encoding="utf8") as f:
-			for line in f: #For each line of text, store in a string variable in the list urlContent_raw.
-				currentDefAsString += line+"\n"
-		#push the string to the database
-		dbCursor.execute("""UPDATE terms SET def_comprehensive = ? WHERE key = ? """, (currentDefAsString,currentKey,))
-	dbConn.commit()
 def deduceTerms(): 
 	pass # TODO: write this function.
 	# expand number of terms known, by creating new entries from any duplicate categories (e.g. a new color from two entries with the category 'color')
