@@ -202,6 +202,19 @@ def sortLists(myLists,index,order):
 	return sortedLists
 
 # Utilities with dependencies on external files:
+def clean_up_temp_files():
+	"""Delete the content in temp_preprocessing_text.txt and temp_processing_text.
+	----------Dependencies:
+	temp_preprocessing_text
+	temp_processing_text.txt
+	
+	----------Return:
+	True
+	"""
+	with open(absolute_filepath+'/temp_preprocessing_text.txt', 'w') as f:
+		f.write("")
+	with open(absolute_filepath+'/temp_processing_text.txt', 'w') as f:
+		f.write("")
 def infinitize(word,pos=None):
 	pass 
 	# TODO: try infinitizing using textacy, then (via regular expressions) the using learned_data.db and lastly, using compromise.
@@ -1261,9 +1274,10 @@ def freewrite_declarative(**kwargs): # start with kws and fill in blanks. save p
 #This section exists simply for testing. The finalized file will call functions in a different way.
 
 if debugging:
-	availableSc = freewrite_declarative(miscList=["penguin"])
-	print("\n---available sentences:")
-	eow(availableSc,True) # prints the results straight from eow()
+	clean_up_temp_files()
+	# availableSc = freewrite_declarative(miscList=["penguin"])
+	# print("\n---available sentences:")
+	# eow(availableSc,True) # prints the results straight from eow()
 else: # The normal main loop
 	cogmod_simple = True
 	while cogmod_simple:
@@ -1292,6 +1306,8 @@ else: # The normal main loop
 		#exit the main loop
 		if cogmod_simple_input == 'exit':
 			inputParsed = True
+			"Exiting..."
+			clean_up_temp_files()
 			reflectOnKnownData()
 			cogmod_simple = False
 		#handle syntax errors
